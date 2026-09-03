@@ -101,6 +101,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
     if (!direction) newErrors.push("Piliin kung Pumasok o Lumabas")
     if (!walletId) newErrors.push("Piliin kung Saan (Wallet)")
     if (isCustomerDebt && !contactName) newErrors.push("Kailangan ang pangalan kapag Inutang ng Customer")
+    if (isBorrowed && !contactName) newErrors.push("Kailangan ang pangalan kapag Nangutang ka")
     
     if (newErrors.length > 0) {
       setErrors(newErrors)

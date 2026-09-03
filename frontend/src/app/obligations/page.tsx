@@ -20,8 +20,9 @@ const formatPHPCompact = (amount: number) => {
   }).format(amount);
 }
 
-export default async function ObligationsPage({ searchParams }: { searchParams: { tab?: string } }) {
-  const isLent = searchParams.tab === 'lent'
+export default async function ObligationsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams
+  const isLent = tab === 'lent'
   const obligations = await getActiveDebtsGrouped(isLent ? 'LENT' : 'BORROWED')
 
   const totalOwed = obligations.reduce((sum, o) => sum + o.total, 0)
