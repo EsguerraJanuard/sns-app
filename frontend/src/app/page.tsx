@@ -239,7 +239,7 @@ export default async function DashboardPage() {
       <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
         <Link 
           href="/transaction/new"
-          className="bg-[#4A4A4A] text-white w-full py-5 rounded-[1.5rem] flex items-center justify-center gap-3 shadow-xl shadow-zinc-900/20 active:scale-95 transition-transform pointer-events-auto border-4 border-white"
+          className="bg-zinc-900 text-white w-full py-5 rounded-[1.5rem] flex items-center justify-center gap-3 shadow-xl shadow-zinc-900/20 active:scale-95 transition-transform pointer-events-auto border-4 border-white"
         >
           <Plus size={28} strokeWidth={3} />
           <span className="text-2xl font-black tracking-wide">ADD TRANSACTION</span>

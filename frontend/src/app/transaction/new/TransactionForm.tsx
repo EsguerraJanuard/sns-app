@@ -551,10 +551,10 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               />
               <div className="flex flex-col items-center gap-2 w-full">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-400'} transition-colors`}>
-                  <Receipt size={20} strokeWidth={2.5} />
+                  {direction === 'OUT' ? <Receipt size={20} strokeWidth={2.5} /> : <XCircle size={20} strokeWidth={2.5} />}
                 </div>
                 <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'font-black text-white' : 'font-bold text-zinc-400'}`}>
-                  EXPENSE / BILLS
+                  {direction === 'OUT' ? 'EXPENSE / BILLS' : 'NO DEDUCTION'}
                 </span>
               </div>
             </label>
