@@ -9,7 +9,7 @@ export type TransactionInput = {
   contact_name?: string
   amount: number
   direction: 'IN' | 'OUT'
-  kind: 'REGULAR' | 'BORROWED' | 'REPAYMENT' | 'TRANSFER' | 'ADJUSTMENT' | 'EXPENSE'
+  kind: 'REGULAR' | 'BORROWED' | 'REPAYMENT' | 'TRANSFER' | 'ADJUSTMENT' | 'EXPENSE' | 'LENT'
   note?: string
 }
 
