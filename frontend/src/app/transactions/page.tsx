@@ -158,6 +158,7 @@ export default async function TransactionsPage({
                 
                 const dateStr = new Intl.DateTimeFormat('en-PH', { 
                   month: 'short', day: 'numeric', year: 'numeric' 
+                }).format(new Date(tx.occurred_at))
                 const showWalletBadge = !isFiltered
                 const isMixedList = !isFiltered
                 const amountColor = isFiltered ? 'text-zinc-900' : wBrand.color
