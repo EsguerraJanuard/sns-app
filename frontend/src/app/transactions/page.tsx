@@ -174,15 +174,18 @@ export default async function TransactionsPage({
                       {/* Details */}
                       <div className="min-w-0 flex-1">
                         <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
-                          {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
+                          {isIn ? 'From ' : 'To '}{tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-zinc-400 font-bold text-sm">
+                          {isIn ? 'To' : 'From'}
                           {showWalletBadge && (
                             <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${wBrand.bg} ${wBrand.color} bg-opacity-10`}>
                               {tx.wallet?.name}
                             </span>
                           )}
-                          <span className="text-sm font-bold text-zinc-400">
+                          {!showWalletBadge && <span>{tx.wallet?.name}</span>}
+                          <span>•</span>
+                          <span>
                             {new Date(tx.occurred_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
                         </div>
