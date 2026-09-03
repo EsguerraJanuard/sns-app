@@ -19,6 +19,12 @@ export async function GET(req: Request) {
   }
   
   if (action === 'populate') {
+    // Ensure Cash wallet exists
+    const { data: cashExists } = await supabase.from('wallets').select('id').eq('slug', 'cash').single()
+    if (!cashExists) {
+      await supabase.from('wallets').insert({ name: 'Cash', slug: 'cash', sort_order: 4 })
+    }
+
     const { data: wallets } = await supabase.from('wallets').select('id, name')
     if (!wallets || wallets.length === 0) return NextResponse.json({ error: 'No wallets found' })
 

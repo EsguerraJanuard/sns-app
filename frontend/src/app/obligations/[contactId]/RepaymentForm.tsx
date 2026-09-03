@@ -11,6 +11,7 @@ const getWalletBrand = (name: string) => {
   if (lower.includes('gcash')) return { color: 'text-blue-600', bg: 'bg-blue-100', peer: 'peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600' };
   if (lower.includes('maya')) return { color: 'text-green-600', bg: 'bg-green-100', peer: 'peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600' };
   if (lower.includes('maribank')) return { color: 'text-orange-500', bg: 'bg-orange-100', peer: 'peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500' };
+  if (lower.includes('cash')) return { color: 'text-emerald-600', bg: 'bg-emerald-100', peer: 'peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600' };
   if (lower.includes('auto-supply')) return { color: 'text-zinc-600', bg: 'bg-zinc-200', peer: 'peer-checked:bg-zinc-700 peer-checked:text-white peer-checked:border-zinc-700' };
   if (lower.includes('load')) return { color: 'text-purple-600', bg: 'bg-purple-100', peer: 'peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600' };
   return { color: 'text-zinc-500', bg: 'bg-zinc-100', peer: 'peer-checked:bg-zinc-600 peer-checked:text-white peer-checked:border-zinc-600' };
@@ -105,9 +106,9 @@ export default function RepaymentForm({
                   onChange={() => setWalletId(w.id)}
                   className="peer sr-only" 
                 />
-                <div className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 border-zinc-200 bg-white transition-all ${Brand.peer}`}>
+                <div className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 border-zinc-200 bg-white text-zinc-500 transition-all ${Brand.peer}`}>
                   <div className="flex items-center gap-3">
-                    <div className="font-bold text-lg uppercase tracking-wide">{w.name}</div>
+                    <div className="font-bold text-lg uppercase tracking-wide group-hover:text-zinc-700 peer-checked:text-white transition-colors">{w.name}</div>
                   </div>
                   {walletId === w.id && (
                     <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center shrink-0">
