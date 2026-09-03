@@ -90,8 +90,17 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
     
     if (raw) {
       const numAmount = Number(raw)
-      const computedFee = Math.ceil(numAmount / 1000) * 10
-      setExchangeFee(computedFee.toString())
+      
+      const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
+      const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
+      const isEWalletInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank') || n.includes('load'))
+
+      if (isEWalletInvolved) {
+        const computedFee = Math.ceil(numAmount / 1000) * 10
+        setExchangeFee(computedFee.toString())
+      } else {
+        setExchangeFee('0')
+      }
 
       const p = raw.split('.')
       p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -140,7 +149,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         wallet_id: walletId,
         kind: kind as any,
         exchange_wallet_id: exchangeWalletId || undefined,
-        exchange_fee: exchangeFee ? Number(exchangeFee) : 0
+        exchange_fee: (exchangeWalletId && isEWalletInvolved && exchangeFee) ? Number(exchangeFee) : 0
       })
       
       setIsSuccess(true)
@@ -155,6 +164,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
   }
 
   const selectedWalletName = wallets.find(w => w.id === walletId)?.name
+  const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
+  const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
+  const isEWalletInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank') || n.includes('load'))
   const activeBrand = selectedWalletName 
     ? getWalletBrand(selectedWalletName) 
     : { solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30', bg: 'bg-zinc-100', color: 'text-zinc-500' }
@@ -402,7 +414,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         </section>
 
         <section className="space-y-2">
-          <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">Saan?</label>
+          <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">Saan Galing?</label>
           <div className="grid grid-cols-2 gap-2">
             {wallets.map((w, index) => {
               const isLastOdd = index === wallets.length - 1 && wallets.length % 2 !== 0;
@@ -432,11 +444,11 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 w-full">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
                       <Icon size={20} strokeWidth={2.5} />
                     </div>
-                    <span className={`text-base uppercase tracking-widest transition-colors ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>
+                    <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>
                       {w.name}
                     </span>
                   </div>
@@ -458,16 +470,11 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               ${!exchangeWalletId ? 'bg-zinc-800 text-white border-zinc-800 font-bold shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
             `}>
               <input type="radio" name="exchangeWallet" value="" checked={!exchangeWalletId} onChange={() => setExchangeWalletId('')} className="sr-only" />
-              <span className="text-base font-black uppercase tracking-widest leading-tight">Walang Kapalit</span>
+              <span className="text-base font-black uppercase tracking-widest leading-tight">WALA</span>
             </label>
             
-            {wallets.map((w, index) => {
-              if (w.id === walletId) return null;
-              
-              // We need to recalculate odd/even based on filtered list to apply col-span-2 if needed
-              const filteredWallets = wallets.filter(fw => fw.id !== walletId);
-              const isLastOdd = index === wallets.length - 1 && filteredWallets.length % 2 !== 0;
-              
+            {wallets.filter(w => w.id !== walletId).map((w, index, filteredArray) => {
+              const isLastOdd = index === filteredArray.length - 1 && filteredArray.length % 2 !== 0;
               const Brand = getWalletBrand(w.name);
               const isSelected = exchangeWalletId === w.id;
               
@@ -478,11 +485,11 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                   ${isLastOdd ? 'col-span-2' : ''}
                 `}>
                   <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => setExchangeWalletId(w.id)} className="sr-only" />
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 w-full">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
                       <Brand.icon size={20} strokeWidth={2.5} />
                     </div>
-                    <span className={`text-base uppercase tracking-widest transition-colors ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
+                    <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
                   </div>
                 </label>
               )
@@ -491,8 +498,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
           
           {exchangeWalletId && (
             <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
-                
-                {/* Quick Fee Buttons */}
+              
+              {/* Quick Fee Buttons */}
+              {isEWalletInvolved && (
                 <div>
                   <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Quick Fee (Discount)</div>
                   <div className="flex flex-wrap gap-2">
@@ -508,7 +516,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                     ))}
                   </div>
                 </div>
+              )}
 
+              {isEWalletInvolved && (
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
                   <input 
@@ -519,6 +529,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                     placeholder="0"
                   />
                 </div>
+              )}
                 
                 <div className="text-xs font-bold text-zinc-500 space-y-1.5 bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
                   {direction === 'OUT' ? (
