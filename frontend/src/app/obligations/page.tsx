@@ -67,14 +67,18 @@ export default async function ObligationsPage({ searchParams }: { searchParams: 
             </div>
           ) : (
             obligations.map((ob: any) => (
-              <div key={ob.contactId} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
+              <Link 
+                href={`/obligations/${ob.contactId}${isLent ? '?tab=lent' : ''}`}
+                key={ob.contactId} 
+                className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3 cursor-pointer group"
+              >
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                   <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isLent ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
                     {isLent ? <ArrowUpRight size={24} strokeWidth={3} /> : <ArrowDownRight size={24} strokeWidth={3} />}
                   </div>
                   
                   <div className="min-w-0 flex-1">
-                    <div className="font-black text-zinc-900 text-lg sm:text-xl mb-0.5 leading-tight break-words">
+                    <div className="font-black text-zinc-900 text-lg sm:text-xl mb-0.5 leading-tight break-words group-hover:text-zinc-700 transition-colors">
                       {ob.name}
                     </div>
                     <div className={`text-sm sm:text-base font-bold flex items-center gap-1.5 break-words leading-tight ${isLent ? 'text-orange-500' : 'text-red-500'}`}>
@@ -87,11 +91,11 @@ export default async function ObligationsPage({ searchParams }: { searchParams: 
                   <div className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-900 shrink-0">
                     {formatPHPCompact(ob.total)}
                   </div>
-                  <Link href={`/obligations/${ob.contactId}${isLent ? '?tab=lent' : ''}`} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors shrink-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 group-hover:bg-zinc-200 transition-colors shrink-0">
                     <ArrowRight size={20} strokeWidth={3} />
-                  </Link>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
