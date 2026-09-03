@@ -33,6 +33,10 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
   const [isCustomerDebt, setIsCustomerDebt] = useState(false) // For OUT
   const [isExpense, setIsExpense] = useState(false) // For OUT
   
+  const defaultExchangeId = wallets.find(w => w.slug === 'cash')?.id || ''
+  const [exchangeWalletId, setExchangeWalletId] = useState<string>(defaultExchangeId)
+  const [exchangeFee, setExchangeFee] = useState<string>('')
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   
@@ -85,11 +89,16 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
     if (parts[1] && parts[1].length > 2) raw = `${parts[0]}.${parts[1].slice(0, 2)}`
     
     if (raw) {
+      const numAmount = Number(raw)
+      const computedFee = Math.ceil(numAmount / 1000) * 10
+      setExchangeFee(computedFee.toString())
+
       const p = raw.split('.')
       p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
       setAmount(p.join('.'))
     } else {
       setAmount('')
+      setExchangeFee('')
     }
   }
 
@@ -129,7 +138,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         contact_name: contactName || undefined,
         amount: Number(amount.replace(/,/g, '')),
         wallet_id: walletId,
-        kind: kind as any
+        kind: kind as any,
+        exchange_wallet_id: exchangeWalletId || undefined,
+        exchange_fee: exchangeFee ? Number(exchangeFee) : 0
       })
       
       setIsSuccess(true)
@@ -194,12 +205,53 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className={`flex justify-between items-center ${exchangeWalletId ? 'border-b border-zinc-50 pb-4' : ''}`}>
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contact</span>
               <span className="text-xl font-black text-zinc-900 break-words text-right max-w-[60%]">
                 {contactName || 'None'}
               </span>
             </div>
+
+            {exchangeWalletId && (
+              <div className="pt-2">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block mb-3">Exchange Breakdown</span>
+                <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 space-y-2">
+                  <div className="flex justify-between items-center text-sm font-bold">
+                    <span className="text-zinc-500">Base Amount</span>
+                    <span className="text-zinc-900">₱{amount}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-bold">
+                    <span className="text-zinc-500">Convenience Fee</span>
+                    <span className="text-zinc-900">₱{exchangeFee || 0}</span>
+                  </div>
+                  <div className="h-px bg-zinc-200 my-2" />
+                  
+                  {direction === 'OUT' ? (
+                    <>
+                      <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                        <span>Total Deducted ({selectedWalletName})</span>
+                        <span>-₱{amount}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-black text-green-600">
+                        <span>Total Added ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                        <span>+₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center text-sm font-black text-green-600">
+                        <span>Total Added ({selectedWalletName})</span>
+                        <span>+₱{amount}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                        <span>Total Deducted ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                        <span>-₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <label className={`
@@ -371,7 +423,13 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                     name="wallet"
                     value={w.id}
                     checked={isSelected}
-                    onChange={(e) => setWalletId(e.target.value)}
+                    onChange={(e) => {
+                      const newWalletId = e.target.value;
+                      setWalletId(newWalletId);
+                      if (exchangeWalletId === newWalletId) {
+                        setExchangeWalletId(''); // Prevent transferring to the same wallet
+                      }
+                    }}
                     className="sr-only peer"
                   />
                   <div className="flex flex-col items-center gap-2">
@@ -385,6 +443,54 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 </label>
               )
             })}
+          </div>
+        </section>
+
+        {/* EXCHANGE / KAPALIT WALLET */}
+        <section className="space-y-2 mt-6">
+          <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">
+            Kabilang Wallet <span className="font-normal normal-case ml-1 text-xs">(Optional for Cash-In/Out)</span>
+          </label>
+          <div className="bg-white rounded-3xl border border-zinc-100 p-2 shadow-sm space-y-2">
+            <select 
+              value={exchangeWalletId}
+              onChange={(e) => setExchangeWalletId(e.target.value)}
+              className="w-full bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-4 text-lg font-bold text-zinc-700 focus:outline-none focus:border-zinc-300"
+            >
+              <option value="">[ None / Walang Kapalit ]</option>
+              {wallets.filter(w => w.id !== walletId).map(w => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+            
+            {exchangeWalletId && (
+              <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
+                  <input 
+                    type="number"
+                    value={exchangeFee}
+                    onChange={(e) => setExchangeFee(e.target.value)}
+                    className="w-full bg-white rounded-xl border border-zinc-200 px-3 py-2 text-xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors"
+                    placeholder="0"
+                  />
+                </div>
+                
+                <div className="text-xs font-bold text-zinc-500 space-y-1">
+                  {direction === 'OUT' ? (
+                    <>
+                      <div className="text-red-500">- ₱{amount || 0} mula sa {selectedWalletName || 'E-Wallet'}</div>
+                      <div className="text-green-500">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)} papasok sa {wallets.find(w => w.id === exchangeWalletId)?.name}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-green-500">+ ₱{amount || 0} papasok sa {selectedWalletName || 'E-Wallet'}</div>
+                      <div className="text-red-500">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)} mula sa {wallets.find(w => w.id === exchangeWalletId)?.name}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

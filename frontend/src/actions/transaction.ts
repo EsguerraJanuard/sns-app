@@ -11,6 +11,8 @@ export type TransactionInput = {
   direction: 'IN' | 'OUT'
   kind: 'REGULAR' | 'BORROWED' | 'REPAYMENT' | 'TRANSFER' | 'ADJUSTMENT' | 'EXPENSE' | 'LENT'
   note?: string
+  exchange_wallet_id?: string
+  exchange_fee?: number
 }
 
 export async function getTransaction(id: string) {
@@ -64,7 +66,13 @@ export async function createTransaction(input: TransactionInput) {
     }
   }
 
-  // 2. Create the transaction
+  // Generate transfer group ID if this is an exchange
+  let transferGroupId = undefined
+  if (input.exchange_wallet_id) {
+    transferGroupId = crypto.randomUUID()
+  }
+
+  // 2. Create the main transaction
   const { data: tx, error: txError } = await supabase
     .from('transactions')
     .insert({
@@ -72,8 +80,9 @@ export async function createTransaction(input: TransactionInput) {
       contact_id: finalContactId || null,
       amount: input.amount,
       direction: input.direction,
-      kind: input.kind,
-      note: input.note || null
+      kind: input.exchange_wallet_id ? 'TRANSFER' : input.kind,
+      note: input.note || null,
+      transfer_group_id: transferGroupId
     })
     .select('id')
     .single()
@@ -93,8 +102,36 @@ export async function createTransaction(input: TransactionInput) {
     })
   }
 
-  // Note: Repayment logic would need obligation mapping here. For MVP, we might keep it simple 
-  // or handle it in a separate repayObligation action.
+  // 4. Create the Exchange / Transfer paired transaction
+  if (input.exchange_wallet_id && transferGroupId) {
+    const fee = input.exchange_fee || 0
+    let exchangeAmount = input.amount
+    let exchangeDirection = 'IN'
+    
+    if (input.direction === 'IN') {
+      // Customer sent to GCash (IN). User gives physical Cash (OUT).
+      // Example: 1000 IN GCash. Fee 10. Cash OUT 990.
+      exchangeDirection = 'OUT'
+      exchangeAmount = input.amount - fee
+    } else {
+      // Customer wants 1000 in GCash. User sends from GCash (OUT). Customer gives Cash (IN).
+      // Example: 1000 OUT GCash. Fee 10. Cash IN 1010.
+      exchangeDirection = 'IN'
+      exchangeAmount = input.amount + fee
+    }
+
+    if (exchangeAmount > 0) {
+      await supabase.from('transactions').insert({
+        wallet_id: input.exchange_wallet_id,
+        contact_id: finalContactId || null,
+        amount: exchangeAmount,
+        direction: exchangeDirection,
+        kind: 'TRANSFER',
+        note: `Exchange / Transfer Fee: ₱${fee}`,
+        transfer_group_id: transferGroupId
+      })
+    }
+  }
 
   revalidatePath('/')
   revalidatePath('/wallets/[slug]', 'page')
