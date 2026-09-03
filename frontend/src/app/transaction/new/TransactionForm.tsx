@@ -159,26 +159,26 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
   if (step === 2) {
     return (
       <div className="flex flex-col min-h-screen bg-zinc-50 relative pb-32">
-        <header className="bg-zinc-900 text-white px-5 pt-8 pb-10 shadow-md rounded-b-[2rem]">
-          <div className="flex items-center mb-6">
+        <header className={`${direction === 'IN' ? 'bg-green-500' : 'bg-blue-500'} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
+          <div className="flex items-center mb-8">
             <button onClick={() => setStep(1)} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
-              <ChevronLeft size={28} />
+              <ChevronLeft size={32} />
             </button>
             <h1 className="text-xl font-bold ml-2">Review Transaction</h1>
           </div>
-          <div className="text-center">
-            <h2 className="text-white/60 text-sm font-bold uppercase tracking-widest mb-1">Check details before saving</h2>
-            <div className="text-4xl font-black tracking-tighter">
+          <div className="text-center px-2">
+            <h2 className="text-white/80 text-sm font-bold uppercase tracking-widest mb-1">Check details before saving</h2>
+            <div className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-sm truncate">
               {direction === 'IN' ? '+' : '-'}₱{amount}
             </div>
           </div>
         </header>
 
-        <div className="px-5 mt-8 space-y-6">
+        <div className="px-5 -mt-8 relative z-30 space-y-6">
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 space-y-5">
             <div className="flex justify-between items-center border-b border-zinc-50 pb-4">
-              <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Type</span>
-              <span className="text-lg font-black text-zinc-900">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Type</span>
+              <span className="text-xl font-black text-zinc-900">
                 {direction === 'IN' ? 'Money IN' : 'Money OUT'}
                 {isBorrowed && ' (Borrowed)'}
                 {isCustomerDebt && ' (Customer Debt)'}
@@ -187,39 +187,42 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
             </div>
             
             <div className="flex justify-between items-center border-b border-zinc-50 pb-4">
-              <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Wallet</span>
-              <span className={`text-lg font-black ${activeBrand.color} bg-opacity-10 px-3 py-1 rounded-xl`}>
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Wallet</span>
+              <span className={`text-xl font-black ${activeBrand.color} bg-opacity-10 px-3 py-1 rounded-xl`}>
                 {selectedWalletName}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Contact</span>
-              <span className="text-lg font-black text-zinc-900 break-words text-right max-w-[60%]">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contact</span>
+              <span className="text-xl font-black text-zinc-900 break-words text-right max-w-[60%]">
                 {contactName || 'None'}
               </span>
             </div>
           </div>
 
-          <label className="flex items-start gap-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+          <label className={`
+            flex items-start gap-4 p-6 rounded-3xl border-2 cursor-pointer transition-colors shadow-sm
+            ${confirmChecked ? 'bg-blue-50 border-blue-500' : 'bg-white border-zinc-200'}
+          `}>
             <input 
               type="checkbox" 
               checked={confirmChecked}
               onChange={(e) => setConfirmChecked(e.target.checked)}
-              className="mt-1 w-6 h-6 rounded-md border-zinc-300 text-blue-600 focus:ring-blue-500" 
+              className="mt-1 w-7 h-7 rounded-lg border-zinc-300 text-blue-600 focus:ring-blue-500 bg-white" 
             />
-            <span className="text-sm font-bold text-zinc-700">
+            <span className={`text-lg font-bold ${confirmChecked ? 'text-blue-900' : 'text-zinc-600'}`}>
               I confirm that the above details are correct.
             </span>
           </label>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 pb-safe z-40">
           <div className="max-w-[400px] mx-auto">
             <button
               onClick={executeSubmit}
               disabled={!confirmChecked || isSubmitting}
-              className="w-full bg-blue-600 disabled:bg-zinc-200 disabled:text-zinc-400 text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className={`w-full ${confirmChecked ? 'bg-zinc-900' : 'bg-zinc-200'} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
             >
               {isSubmitting ? 'Saving...' : 'Confirm & Save'}
             </button>

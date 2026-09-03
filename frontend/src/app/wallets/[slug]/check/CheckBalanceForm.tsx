@@ -134,13 +134,40 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
           </div>
         </div>
 
-        <button
-          onClick={handleCheck}
-          disabled={isSubmitting || !actualStr}
-          className={`w-full ${Brand.headerBg} disabled:opacity-50 disabled:shadow-none text-white text-2xl font-black py-5 rounded-[1.5rem] shadow-xl active:scale-95 transition-all mt-8`}
-        >
-          {isSubmitting ? 'Checking...' : 'CHECK'}
-        </button>
+        <div className="space-y-4 mt-8">
+          <button
+            onClick={handleCheck}
+            disabled={isSubmitting || !actualStr}
+            className={`w-full ${Brand.headerBg} disabled:opacity-50 disabled:shadow-none text-white text-2xl font-black py-5 rounded-[1.5rem] shadow-xl active:scale-95 transition-all`}
+          >
+            {isSubmitting ? 'Checking...' : 'CHECK'}
+          </button>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-zinc-200"></div>
+            <span className="flex-shrink-0 mx-4 text-zinc-400 font-bold text-sm uppercase tracking-widest">Or</span>
+            <div className="flex-grow border-t border-zinc-200"></div>
+          </div>
+
+          <button
+            onClick={async () => {
+              setIsSubmitting(true)
+              await saveReconciliation({
+                wallet_id: walletId,
+                expected_balance: expected,
+                observed_balance: expected,
+                difference: 0
+              })
+              setResult({ diff: 0, checked: true })
+              setIsSubmitting(false)
+            }}
+            disabled={isSubmitting}
+            className={`w-full bg-white border-2 ${Brand.border} ${Brand.buttonColor} text-xl font-bold py-4 rounded-[1.5rem] shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2`}
+          >
+            <CheckCircle2 size={24} strokeWidth={2.5} />
+            Sakto ang laman!
+          </button>
+        </div>
       </main>
     </div>
   )
