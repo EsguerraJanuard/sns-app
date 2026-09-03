@@ -312,7 +312,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         </div>
         
         <div className="text-center mt-2">
-          <label className="text-white/80 text-sm font-bold uppercase tracking-widest block mb-1">Magkano?</label>
+          <label className="text-white/80 text-sm font-bold uppercase tracking-widest block mb-1">Amount</label>
           <div className="flex items-center justify-center gap-1">
             <span className={`text-5xl font-bold ${amount ? 'text-white' : 'text-white/40'}`}>₱</span>
             <input 
@@ -335,7 +335,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
             <div className="flex items-center gap-2 text-red-600 font-bold mb-2">
               <AlertTriangle size={20} />
-              <p>Kulangan pa:</p>
+              <p>Please fix the following:</p>
             </div>
             <ul className="list-disc pl-5 text-red-600 text-sm font-semibold">
               {errors.map((err, i) => (
@@ -360,7 +360,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
             }`}
           >
             <ArrowDownRight size={22} strokeWidth={3} />
-            Pumasok
+            Money IN
           </button>
           <button
             type="button"
@@ -375,7 +375,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
             }`}
           >
             <ArrowUpRight size={22} strokeWidth={3} />
-            Lumabas
+            Money OUT
           </button>
         </section>
 
@@ -417,7 +417,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         </section>
 
         <section className="space-y-2">
-          <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">Saan Galing?</label>
+          <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">
+            {direction === 'OUT' ? 'SOURCE WALLET' : 'DESTINATION WALLET'}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {wallets.map((w, index) => {
               const isLastOdd = index === wallets.length - 1 && wallets.length % 2 !== 0;
@@ -464,7 +466,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         {/* EXCHANGE / KAPALIT WALLET */}
         <section className="space-y-2 mt-6">
           <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">
-            Patutunguhan / Destination
+            {direction === 'OUT' ? 'DESTINATION WALLET' : 'SOURCE WALLET'}
           </label>
           <div className="grid grid-cols-2 gap-2">
             
@@ -597,13 +599,13 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 <div className="text-xs font-bold text-zinc-500 space-y-1.5 bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
                   {direction === 'OUT' ? (
                     <>
-                      <div className="flex justify-between text-red-500"><span>Mula sa {selectedWalletName || 'E-Wallet'}</span> <span>- ₱{amount || 0}</span></div>
-                      <div className="flex justify-between text-green-600 font-black"><span>Papasok sa {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span></div>
+                      <div className="flex justify-between text-red-500"><span>From {selectedWalletName || 'Wallet'}</span> <span>- ₱{amount || 0}</span></div>
+                      <div className="flex justify-between text-green-600 font-black"><span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span></div>
                     </>
                   ) : (
                     <>
-                      <div className="flex justify-between text-green-600 font-black"><span>Papasok sa {selectedWalletName || 'E-Wallet'}</span> <span>+ ₱{amount || 0}</span></div>
-                      <div className="flex justify-between text-red-500"><span>Mula sa {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span></div>
+                      <div className="flex justify-between text-green-600 font-black"><span>To {selectedWalletName || 'Wallet'}</span> <span>+ ₱{amount || 0}</span></div>
+                      <div className="flex justify-between text-red-500"><span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span></div>
                     </>
                   )}
                 </div>
@@ -618,8 +620,8 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               ${isBorrowed ? 'bg-red-50 border-red-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
             `}>
               <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isBorrowed ? 'text-red-700' : 'text-zinc-700'}`}>Inutang ko 'to</p>
-                <p className={`text-sm font-medium ${isBorrowed ? 'text-red-600/70' : 'text-zinc-400'}`}>Check mo kung galing sa utang yung pera</p>
+                <p className={`text-lg font-black truncate ${isBorrowed ? 'text-red-700' : 'text-zinc-700'}`}>Borrowed</p>
+                <p className={`text-sm font-medium ${isBorrowed ? 'text-red-600/70' : 'text-zinc-400'}`}>Check if this money is borrowed</p>
               </div>
               <input 
                 type="checkbox" 
@@ -641,8 +643,8 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               ${isCustomerDebt ? 'bg-orange-50 border-orange-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
             `}>
               <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isCustomerDebt ? 'text-orange-700' : 'text-zinc-700'}`}>Utang ng Customer</p>
-                <p className={`text-sm font-medium ${isCustomerDebt ? 'text-orange-600/70' : 'text-zinc-400'}`}>Check mo kung nangutang ang customer</p>
+                <p className={`text-lg font-black truncate ${isCustomerDebt ? 'text-orange-700' : 'text-zinc-700'}`}>Customer Debt</p>
+                <p className={`text-sm font-medium ${isCustomerDebt ? 'text-orange-600/70' : 'text-zinc-400'}`}>Check if this is an unpaid debt</p>
               </div>
               <input 
                 type="checkbox" 
