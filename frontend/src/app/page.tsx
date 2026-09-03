@@ -52,29 +52,35 @@ export default async function DashboardPage() {
     <main className="flex flex-col flex-1 w-full pb-40 bg-zinc-50 min-h-screen relative">
       
       {/* Header / Total Expected */}
-      <header className="bg-zinc-900 text-white px-5 pt-8 pb-10 shadow-lg rounded-b-[2.5rem] relative z-20">
-        <LiveClock />
+      <section className="bg-zinc-900 text-white px-6 pt-10 pb-16 shadow-lg rounded-b-[2.5rem] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         
-        <div className="mt-8 text-center">
-          <h2 className="text-white/60 text-xs font-black tracking-[0.2em] uppercase mb-2">Total Expected Money</h2>
-          <div className="text-5xl font-black tracking-tighter drop-shadow-sm">
-            {formatPHP(totalExpected)}
-          </div>
+        <LiveClock />
+        <h2 className="text-white/70 text-sm font-black uppercase tracking-widest mt-6 mb-1">Total Expected Money</h2>
+        <div className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-sm truncate">
+          {formatPHPCompact(totalExpected)}
         </div>
+      </section>
 
-        <div className="mt-8 flex gap-3">
-          <div className="flex-1 bg-white/10 rounded-[1.5rem] p-4 border border-white/5 backdrop-blur-md">
-            <div className="text-white/50 text-[10px] font-black tracking-[0.2em] uppercase mb-1">In Today</div>
-            <div className="text-green-400 font-bold text-xl">{formatPHPCompact(todaySummary.in)}</div>
+      <div className="px-5 py-6 space-y-8 flex-1 -mt-10 relative z-10">
+        
+        {/* Today's Summary */}
+        <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-100">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+              <ArrowDownRight size={16} className="text-green-500" strokeWidth={3} />
+              TODAY IN
+            </div>
+            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
           </div>
-          <div className="flex-1 bg-white/10 rounded-[1.5rem] p-4 border border-white/5 backdrop-blur-md">
-            <div className="text-white/50 text-[10px] font-black tracking-[0.2em] uppercase mb-1">Out Today</div>
-            <div className="text-blue-300 font-bold text-xl">{formatPHPCompact(todaySummary.out)}</div>
+          <div className="flex-1 pl-4 min-w-0">
+            <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+              <ArrowUpRight size={16} className="text-blue-500" strokeWidth={3} />
+              TODAY OUT
+            </div>
+            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
           </div>
-        </div>
-      </header>
-
-      <div className="px-5 -mt-6 relative z-10 space-y-6">
+        </section>
         
         {/* Wallets */}
         <section className="space-y-3 mt-8">
