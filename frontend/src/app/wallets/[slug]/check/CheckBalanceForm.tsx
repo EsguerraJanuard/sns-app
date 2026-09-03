@@ -73,7 +73,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
           <>
             <CheckCircle2 size={96} className="text-green-500" strokeWidth={3} />
             <h2 className="text-4xl font-extrabold text-zinc-900">Sakto!</h2>
-            <p className="text-xl text-zinc-600 font-medium">Ang record mo at ang tunay na {walletName} app ay parehong-pareho.</p>
+            <p className="text-xl text-zinc-600 font-medium">Ang record mo at ang tunay na {walletName} {slug === 'cash' ? '' : 'app '}ay parehong-pareho.</p>
           </>
         ) : (
           <>
@@ -83,7 +83,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
             <h2 className="text-3xl font-extrabold text-zinc-900">May kulang o sobra!</h2>
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-zinc-200 w-full space-y-3">
                <p className="text-xl text-zinc-600 font-medium">
-                Ang totoong laman ng app mo ay mas <strong className="text-zinc-900 font-black">{isLower ? 'MABABA' : 'MATAAS'}</strong> ng <strong className="text-zinc-900 font-black">{formatPHP(Math.abs(result.diff))}</strong> kaysa sa inaasahan.
+                Ang totoong laman ng {slug === 'cash' ? 'Cash' : 'app'} mo ay mas <strong className="text-zinc-900 font-black">{isLower ? 'MABABA' : 'MATAAS'}</strong> ng <strong className="text-zinc-900 font-black">{formatPHP(Math.abs(result.diff))}</strong> kaysa sa inaasahan.
               </p>
               <hr className="border-zinc-100" />
               <p className="text-lg text-zinc-500 font-medium">I-check ang "Recent History" para hanapin kung may nakalimutan kang ilista kanina.</p>
@@ -119,7 +119,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
       <main className="p-5 space-y-8 flex-1 -mt-4 relative z-0">
         <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-zinc-100 space-y-6">
           <label className="text-xl font-bold text-zinc-900 text-center block leading-snug">
-            Magkano ang naka-display na laman ngayon sa totoong <span className={Brand.buttonColor}>{walletName}</span> app mo?
+            Magkano ang naka-display na laman ngayon sa totoong <span className={Brand.buttonColor}>{walletName}</span> {slug === 'cash' ? '' : 'app '}mo?
           </label>
           <div className="relative">
             <span className={`absolute left-5 top-1/2 -translate-y-1/2 text-4xl font-extrabold ${actualStr ? 'text-zinc-900' : 'text-zinc-300'}`}>₱</span>

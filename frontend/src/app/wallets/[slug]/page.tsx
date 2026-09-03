@@ -68,7 +68,9 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
         <Link href={`/wallets/${wallet.slug}/check`} className="bg-white border-2 border-zinc-100 rounded-3xl p-5 flex items-center justify-between shadow-sm active:scale-95 transition-transform">
           <div>
             <div className="font-extrabold text-xl text-zinc-900">Check Balance</div>
-            <div className="text-zinc-500 font-medium mt-1">Does it match the real app?</div>
+            <div className="text-zinc-500 font-medium mt-1">
+              {wallet.slug === 'cash' ? 'Does it match your physical cash?' : 'Does it match the real app?'}
+            </div>
           </div>
           <div className={`${Brand.buttonBg} ${Brand.buttonColor} p-4 rounded-full shadow-sm`}>
             <Scale size={28} strokeWidth={2.5} />
