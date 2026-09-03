@@ -314,7 +314,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         <div className="text-center mt-2">
           <label className="text-white/80 text-sm font-bold uppercase tracking-widest block mb-1">Amount</label>
           <div className="flex items-center justify-center gap-1">
-            <span className={`text-5xl font-bold ${amount ? 'text-white' : 'text-white/40'}`}>₱</span>
+            <span className={`text-4xl sm:text-5xl font-bold mt-1 ${amount ? 'text-white' : 'text-white/40'}`}>₱</span>
             <input 
               ref={amountRef}
               type="text"
@@ -324,7 +324,8 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               onKeyDown={handleAmountKeyDown}
               enterKeyHint="next"
               placeholder="0.00"
-              className="w-full max-w-[220px] text-6xl font-black bg-transparent text-white focus:outline-none placeholder:text-white/40"
+              size={Math.max(4, amount.length || 4)}
+              className="text-5xl sm:text-6xl font-black bg-transparent text-white focus:outline-none placeholder:text-white/40"
             />
           </div>
         </div>
