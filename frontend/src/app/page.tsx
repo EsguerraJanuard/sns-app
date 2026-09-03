@@ -52,36 +52,30 @@ export default async function DashboardPage() {
     <main className="flex flex-col flex-1 w-full pb-40 bg-zinc-50 min-h-screen relative">
       
       {/* Header / Total Expected */}
-      <section className="bg-zinc-900 text-white px-6 pt-10 pb-16 shadow-lg rounded-b-[2.5rem] relative overflow-hidden z-20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-        
+      <header className="bg-zinc-900 text-white px-5 pt-8 pb-10 shadow-lg rounded-b-[2.5rem] relative z-20">
         <LiveClock />
-        <h2 className="text-white/70 text-sm font-black uppercase tracking-widest mt-6 mb-1">Total Expected Money</h2>
-        <div className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-sm truncate">
-          {formatPHPCompact(totalExpected)}
-        </div>
-      </section>
-
-      <div className="px-5 py-6 space-y-8 flex-1 -mt-10 relative z-10">
         
-        {/* Today's Summary */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-100">
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowDownRight size={16} className="text-green-500" strokeWidth={3} />
-              TODAY IN
-            </div>
-            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
+        <div className="mt-8 text-center">
+          <h2 className="text-white/60 text-xs font-black tracking-[0.2em] uppercase mb-2">Total Expected Money</h2>
+          <div className="text-5xl font-black tracking-tighter drop-shadow-sm">
+            {formatPHP(totalExpected)}
           </div>
-          <div className="flex-1 pl-4 min-w-0">
-            <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowUpRight size={16} className="text-blue-500" strokeWidth={3} />
-              TODAY OUT
-            </div>
-            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
-          </div>
-        </section>
+        </div>
 
+        <div className="mt-8 flex gap-3">
+          <div className="flex-1 bg-white/10 rounded-[1.5rem] p-4 border border-white/5 backdrop-blur-md">
+            <div className="text-white/50 text-[10px] font-black tracking-[0.2em] uppercase mb-1">In Today</div>
+            <div className="text-green-400 font-bold text-xl">{formatPHPCompact(todaySummary.in)}</div>
+          </div>
+          <div className="flex-1 bg-white/10 rounded-[1.5rem] p-4 border border-white/5 backdrop-blur-md">
+            <div className="text-white/50 text-[10px] font-black tracking-[0.2em] uppercase mb-1">Out Today</div>
+            <div className="text-blue-300 font-bold text-xl">{formatPHPCompact(todaySummary.out)}</div>
+          </div>
+        </div>
+      </header>
+
+      <div className="px-5 -mt-6 relative z-10 space-y-6">
+        
         {/* Wallets */}
         <section className="space-y-3 mt-8">
           <div className="flex items-center gap-2 mb-2 px-1">
@@ -114,27 +108,59 @@ export default async function DashboardPage() {
         </section>
 
         {/* Debts Section */}
-        {(totalOwed > 0 || totalCollect > 0) && (
+        {totalOwed > 0 && totalCollect > 0 && (
           <section className="grid grid-cols-2 gap-3 mt-8">
-            {totalOwed > 0 && (
-              <Link 
-                href="/obligations"
-                className="bg-red-50 border-2 border-red-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
-              >
-                <div className="text-red-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Utang Mo<br/>(To Return)</div>
-                <div className="font-extrabold text-2xl text-red-700 truncate tracking-tighter">{formatPHPCompact(totalOwed)}</div>
-              </Link>
-            )}
+            <Link 
+              href="/obligations"
+              className="bg-red-50 border-2 border-red-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
+            >
+              <div className="text-red-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Utang Mo<br/>(To Return)</div>
+              <div className="font-extrabold text-2xl text-red-700 truncate tracking-tighter">{formatPHPCompact(totalOwed)}</div>
+            </Link>
             
-            {totalCollect > 0 && (
-              <Link 
-                href="/obligations?tab=lent"
-                className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
-              >
-                <div className="text-orange-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Pautang<br/>(To Collect)</div>
-                <div className="font-extrabold text-2xl text-orange-700 truncate tracking-tighter">{formatPHPCompact(totalCollect)}</div>
-              </Link>
-            )}
+            <Link 
+              href="/obligations?tab=lent"
+              className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
+            >
+              <div className="text-orange-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Pautang<br/>(To Collect)</div>
+              <div className="font-extrabold text-2xl text-orange-700 truncate tracking-tighter">{formatPHPCompact(totalCollect)}</div>
+            </Link>
+          </section>
+        )}
+
+        {totalOwed > 0 && totalCollect === 0 && (
+          <section className="mt-8">
+            <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform">
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1 truncate">
+                  Borrowed Money
+                </div>
+                <div className="text-2xl font-black text-red-700 tracking-tighter truncate">
+                  {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-200 transition-colors shrink-0">
+                <ArrowRight size={24} strokeWidth={3} />
+              </div>
+            </Link>
+          </section>
+        )}
+
+        {totalCollect > 0 && totalOwed === 0 && (
+          <section className="mt-8">
+            <Link href="/obligations?tab=lent" className="bg-orange-50 rounded-3xl p-6 shadow-sm border border-orange-100 flex items-center justify-between group active:scale-[0.98] transition-transform">
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-orange-500 uppercase tracking-widest mb-1 truncate">
+                  Pautang
+                </div>
+                <div className="text-2xl font-black text-orange-700 tracking-tighter truncate">
+                  {formatPHPCompact(totalCollect)} <span className="text-lg font-bold opacity-70">to collect</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center group-hover:bg-orange-200 transition-colors shrink-0">
+                <ArrowRight size={24} strokeWidth={3} />
+              </div>
+            </Link>
           </section>
         )}
 
