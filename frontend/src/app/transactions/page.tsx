@@ -21,15 +21,7 @@ const formatPHPCompact = (amount: number) => {
   return formatPHP(amount);
 }
 
-const getWalletBrand = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('maya')) return { color: 'text-green-600', bg: 'bg-green-600', peerBg: 'peer-checked:bg-green-600' };
-  if (lower.includes('gcash')) return { color: 'text-blue-600', bg: 'bg-blue-600', peerBg: 'peer-checked:bg-blue-600' };
-  if (lower.includes('maribank')) return { color: 'text-orange-500', bg: 'bg-orange-500', peerBg: 'peer-checked:bg-orange-500' };
-  if (lower.includes('auto-supply')) return { color: 'text-zinc-700', bg: 'bg-zinc-800', peerBg: 'peer-checked:bg-zinc-800' };
-  if (lower.includes('load')) return { color: 'text-purple-600', bg: 'bg-purple-600', peerBg: 'peer-checked:bg-purple-600' };
-  return { color: 'text-zinc-500', bg: 'bg-[#4A4A4A]', peerBg: 'peer-checked:bg-[#4A4A4A]' };
-}
+import { getWalletBrand } from "@/lib/walletUtils"
 
 export default async function TransactionsPage({
   searchParams,
@@ -53,7 +45,7 @@ export default async function TransactionsPage({
   
   const selectedWallet = wallets.find(w => w.id === wallet)
   const isFiltered = !!selectedWallet
-  const themeBg = selectedWallet ? getWalletBrand(selectedWallet.name).bg : 'bg-[#4A4A4A]'
+  const themeBg = selectedWallet ? getWalletBrand(selectedWallet.name).headerBg : 'bg-zinc-900'
 
   return (
     <main className="flex flex-col flex-1 w-full bg-zinc-50 min-h-screen">
@@ -96,21 +88,32 @@ export default async function TransactionsPage({
               {/* Wallet Selection (Custom Radio Pills instead of Dropdown) */}
               <div>
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block mb-2">Wallet</label>
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x no-scrollbar">
-                  <label className="shrink-0 snap-start cursor-pointer">
-                    <input type="radio" name="wallet" value="" defaultChecked={!wallet} className="peer hidden" />
-                    <div className="px-5 py-3 rounded-2xl border-2 border-zinc-100 bg-zinc-50 text-zinc-500 font-bold peer-checked:border-zinc-800 peer-checked:bg-zinc-800 peer-checked:text-white transition-all">
-                      All Wallets
+                <div className="grid grid-cols-2 gap-2">
+                  <label className={`
+                    col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                    ${!wallet ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
+                  `}>
+                    <input type="radio" name="wallet" value="" defaultChecked={!wallet} className="peer sr-only" onChange={(e) => e.target.form?.requestSubmit()} />
+                    <div className="flex flex-col items-center gap-1 w-full">
+                      <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
+                        ALL WALLETS
+                      </span>
                     </div>
                   </label>
                   {wallets.map(w => {
-                    const brand = getWalletBrand(w.name)
+                    const Brand = getWalletBrand(w.name)
                     const isChecked = wallet === w.id
                     return (
-                      <label key={w.id} className="shrink-0 snap-start cursor-pointer">
-                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer hidden" />
-                        <div className={`px-5 py-3 rounded-2xl border-2 font-bold transition-all border-zinc-100 bg-zinc-50 text-zinc-500 peer-checked:border-transparent peer-checked:text-white ${brand.peerBg}`}>
-                          {w.name}
+                      <label key={w.id} className={`
+                        relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                        ${isChecked ? `bg-white border-${Brand.color.replace('text-', '')} shadow-sm shadow-${Brand.color.replace('text-', '')}/20` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
+                      `}>
+                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" onChange={(e) => e.target.form?.requestSubmit()} />
+                        <div className="flex flex-col items-center gap-2 w-full">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isChecked ? Brand.headerBg : Brand.bg} ${isChecked ? 'text-white' : Brand.color} transition-colors`}>
+                            <Brand.icon size={20} strokeWidth={2.5} />
+                          </div>
+                          <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isChecked ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
                         </div>
                       </label>
                     )
@@ -164,7 +167,7 @@ export default async function TransactionsPage({
                 const amountColor = isFiltered ? 'text-zinc-900' : wBrand.color
 
                 return (
-                  <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3 block">
+                  <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
                       <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
@@ -173,10 +176,10 @@ export default async function TransactionsPage({
                       
                       {/* Details */}
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
+                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words pr-2">
                           {isIn ? 'From ' : 'To '}{tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
-                        <div className="flex items-center gap-2 text-zinc-400 font-bold text-sm">
+                        <div className="flex items-center gap-1.5 text-zinc-400 font-bold text-sm flex-wrap">
                           {isIn ? 'To' : 'From'}
                           {showWalletBadge && (
                             <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${wBrand.bg} ${wBrand.color} bg-opacity-10`}>

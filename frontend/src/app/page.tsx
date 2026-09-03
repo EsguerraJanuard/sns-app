@@ -196,10 +196,10 @@ export default async function DashboardPage() {
                       
                       {/* Details */}
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
+                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words pr-2">
                           {isIn ? 'From ' : 'To '}{tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
-                        <div className="text-base font-bold text-zinc-400 flex items-center gap-1.5 flex-wrap truncate">
+                        <div className="text-base font-bold text-zinc-400 flex items-center gap-1.5 flex-wrap">
                           {isIn ? 'To ' : 'From '}
                           <span className={wBrand.color}>{tx.wallet?.name || 'Unknown'}</span>
                           <span>•</span>
