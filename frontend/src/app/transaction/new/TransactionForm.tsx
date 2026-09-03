@@ -93,11 +93,14 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
       
       const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
       const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
-      const isEWalletInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank') || n.includes('load'))
+      const isBankInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank'))
+      const isLoadInvolved = [w1, w2].some(n => n.includes('load'))
 
-      if (isEWalletInvolved) {
+      if (isBankInvolved) {
         const computedFee = Math.ceil(numAmount / 1000) * 10
         setExchangeFee(computedFee.toString())
+      } else if (isLoadInvolved) {
+        setExchangeFee('5')
       } else {
         setExchangeFee('0')
       }
@@ -149,7 +152,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         wallet_id: walletId,
         kind: kind as any,
         exchange_wallet_id: exchangeWalletId || undefined,
-        exchange_fee: (exchangeWalletId && isEWalletInvolved && exchangeFee) ? Number(exchangeFee) : 0
+        exchange_fee: (exchangeWalletId && isFeeApplicable && exchangeFee) ? Number(exchangeFee) : 0
       })
       
       setIsSuccess(true)
@@ -166,7 +169,9 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
   const selectedWalletName = wallets.find(w => w.id === walletId)?.name
   const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
   const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
-  const isEWalletInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank') || n.includes('load'))
+  const isBankInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank'))
+  const isLoadInvolved = [w1, w2].some(n => n.includes('load'))
+  const isFeeApplicable = isBankInvolved || isLoadInvolved
   const activeBrand = selectedWalletName 
     ? getWalletBrand(selectedWalletName) 
     : { solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30', bg: 'bg-zinc-100', color: 'text-zinc-500' }
@@ -558,11 +563,11 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
             <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
               
               {/* Quick Fee Buttons */}
-              {isEWalletInvolved && (
+              {isFeeApplicable && (
                 <div>
                   <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Quick Fee (Discount)</div>
                   <div className="flex flex-wrap gap-2">
-                    {[0, 5, 10, 15, 20, 25, 30].map(val => (
+                    {(isLoadInvolved ? [0, 5, 10, 15, 20] : [0, 5, 10, 15, 20, 25, 30]).map(val => (
                       <button
                         key={val}
                         type="button"
@@ -576,7 +581,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 </div>
               )}
 
-              {isEWalletInvolved && (
+              {isFeeApplicable && (
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
                   <input 
