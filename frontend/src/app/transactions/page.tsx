@@ -60,7 +60,7 @@ export default async function TransactionsPage({
       
       <form action="/transactions" method="GET" className="flex flex-col min-h-screen">
         {/* Header Section (Dynamic Color) */}
-        <header className={`${themeBg} text-white px-5 pt-8 pb-12 shadow-sm rounded-b-[2rem] relative z-20 transition-colors duration-500`}>
+        <header className={`${themeBg} text-white px-5 pt-8 pb-12 shadow-sm rounded-b-[2.5rem] relative z-20 transition-colors duration-500`}>
           <div className="flex items-center mb-6">
             <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
               <ChevronLeft size={32} />

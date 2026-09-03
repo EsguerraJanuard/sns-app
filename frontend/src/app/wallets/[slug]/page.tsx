@@ -44,7 +44,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
   return (
     <div className="flex-1 flex flex-col bg-zinc-50 min-h-screen pb-24">
       {/* Header */}
-      <header className={`${Brand.headerBg} text-white px-6 pt-10 pb-12 shadow-md rounded-b-[2rem] sticky top-0 z-10 transition-colors duration-300`}>
+      <header className={`${Brand.headerBg} text-white px-6 pt-10 pb-12 shadow-md rounded-b-[2.5rem] sticky top-0 z-10 transition-colors duration-300`}>
         <div className="flex items-center mb-6">
           <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 active:bg-white/20 transition-colors">
             <ChevronLeft size={28} />
