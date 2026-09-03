@@ -68,13 +68,18 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
     const isLower = result.diff < 0
     
     return (
-      <div className="p-6 pt-16 space-y-8 flex flex-col items-center text-center bg-zinc-50 min-h-screen">
+      <div className="p-6 pt-24 space-y-8 flex flex-col items-center justify-center text-center bg-zinc-50 min-h-screen">
         {isExact ? (
-          <>
-            <CheckCircle2 size={96} className="text-green-500" strokeWidth={3} />
-            <h2 className="text-4xl font-extrabold text-zinc-900">Sakto!</h2>
-            <p className="text-xl text-zinc-600 font-medium">Ang record mo at ang tunay na {walletName} {slug === 'cash' ? '' : 'app '}ay parehong-pareho.</p>
-          </>
+          <div className="flex flex-col items-center space-y-6">
+            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center shadow-inner mb-4 relative">
+              <div className="absolute inset-0 bg-green-400 opacity-20 rounded-full animate-ping"></div>
+              <CheckCircle2 size={72} className="text-green-600 relative z-10" strokeWidth={3} />
+            </div>
+            <h2 className="text-5xl font-black text-zinc-900 tracking-tight">Sakto!</h2>
+            <p className="text-xl text-zinc-500 font-medium max-w-[280px]">
+              Ang record mo at ang tunay na {walletName} {slug === 'cash' ? '' : 'app '}ay parehong-pareho.
+            </p>
+          </div>
         ) : (
           <>
             <div className={`w-24 h-24 rounded-full flex items-center justify-center text-5xl font-black shadow-sm ${isLower ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -90,10 +95,16 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
             </div>
           </>
         )}
-        
-        <Link href={`/wallets/${slug}`} className={`mt-8 ${Brand.headerBg} text-white px-8 py-5 rounded-2xl text-xl font-bold shadow-xl w-full active:scale-95 transition-transform`}>
-          Done
-        </Link>
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-zinc-50 border-t border-zinc-200/50 pb-safe z-40">
+          <div className="max-w-[400px] mx-auto">
+            <Link 
+              href={`/wallets/${slug}`} 
+              className={`flex items-center justify-center w-full ${isExact ? 'bg-green-600' : Brand.headerBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-all`}
+            >
+              Done
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }
