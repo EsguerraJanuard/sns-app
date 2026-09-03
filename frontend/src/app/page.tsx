@@ -150,6 +150,7 @@ export default async function DashboardPage() {
               recentTxs.map((tx: any) => {
                 const isIn = tx.direction === 'IN'
                 const wBrand = getWalletBrand(tx.wallet?.name || '')
+                const dateStr = new Date(tx.occurred_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
                 
                 return (
                   <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
