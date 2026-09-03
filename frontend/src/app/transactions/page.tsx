@@ -34,9 +34,13 @@ const getBrandColor = (name: string) => {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; from?: string; to?: string; wallet?: string }
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
-  const { q, from, to, wallet } = searchParams
+  const resolvedParams = await searchParams
+  const q = resolvedParams.q
+  const from = resolvedParams.from
+  const to = resolvedParams.to
+  const wallet = resolvedParams.wallet
   
   const transactions = await searchTransactions({
     query: q,
