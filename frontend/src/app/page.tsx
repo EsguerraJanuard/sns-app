@@ -69,13 +69,13 @@ export default async function DashboardPage() {
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               TODAY IN
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap truncate">+{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">+{formatPHPCompact(todaySummary.in)}</div>
           </div>
           <div className="flex-1 pl-4 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               TODAY OUT
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap truncate">-{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">-{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
 
@@ -135,10 +135,10 @@ export default async function DashboardPage() {
                       
                       {/* Details */}
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight truncate">
+                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight">
                           {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
-                        <div className="text-base font-bold text-zinc-400 flex items-center gap-1.5 truncate">
+                        <div className="text-base font-bold text-zinc-400 flex items-center gap-1.5 flex-wrap">
                           <span className={wBrand.color}>{tx.wallet?.name || 'Unknown'}</span>
                           {tx.kind === 'BORROWED' && (
                             <>
