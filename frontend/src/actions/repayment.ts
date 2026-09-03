@@ -8,6 +8,7 @@ export async function repayObligation(formData: FormData) {
   const contactId = formData.get('contactId') as string
   const walletId = formData.get('walletId') as string
   const amountStr = formData.get('amount') as string
+  const isLent = formData.get('isLent') === 'true'
   
   // Clean string (e.g. "5,000" -> 5000)
   const amount = Number(amountStr.replace(/,/g, ''))
@@ -17,15 +18,25 @@ export async function repayObligation(formData: FormData) {
   }
 
   // 1. Fetch all open obligations for this contact, ordered by oldest first
-  const { data: obs, error: obsError } = await supabase
+  const debtType = isLent ? 'LENT' : 'BORROWED'
+  const { data: obsRaw, error: obsError } = await supabase
     .from('obligations')
-    .select('id, original_amount')
+    .select('id, original_amount, transactions(kind)')
     .eq('contact_id', contactId)
     .eq('status', 'open')
     .order('opened_at', { ascending: true })
 
-  if (obsError || !obs || obs.length === 0) {
+  if (obsError || !obsRaw || obsRaw.length === 0) {
     throw new Error('No open obligations found for this person.')
+  }
+
+  const obs = obsRaw.filter(o => {
+    const kind = (o.transactions as any)?.kind || 'BORROWED'
+    return kind === debtType
+  })
+
+  if (obs.length === 0) {
+    throw new Error('No open obligations of this type found.')
   }
 
   // Fetch all repayments for these obligations
@@ -49,14 +60,14 @@ export async function repayObligation(formData: FormData) {
     throw new Error(`Repayment amount (₱${amount}) cannot exceed the total amount owed (₱${totalOwed}).`)
   }
 
-  // 2. Create the Money OUT transaction
+  // 2. Create the Money IN/OUT transaction based on isLent
   const { data: tx, error: txError } = await supabase
     .from('transactions')
     .insert({
       wallet_id: walletId,
       contact_id: contactId,
       amount: amount,
-      direction: 'OUT',
+      direction: isLent ? 'IN' : 'OUT',
       kind: 'REPAYMENT',
       status: 'active'
     })

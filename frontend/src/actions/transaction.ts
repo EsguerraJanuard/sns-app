@@ -83,8 +83,8 @@ export async function createTransaction(input: TransactionInput) {
     throw new Error('Could not save transaction')
   }
 
-  // 3. If Borrowed, create obligation
-  if (input.kind === 'BORROWED' && finalContactId && tx) {
+  // 3. If Borrowed or Lent, create obligation
+  if ((input.kind === 'BORROWED' || input.kind === 'LENT') && finalContactId && tx) {
     await supabase.from('obligations').insert({
       contact_id: finalContactId,
       origin_transaction_id: tx.id,

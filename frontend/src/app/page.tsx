@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History, ArrowRight } from "lucide-react"
 import { getWallets, Wallet } from "@/actions/wallet"
 import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
-import { getTotalObligations } from "@/actions/obligation"
+import { getTotalDebts } from "@/actions/obligation"
 import LiveClock from "@/components/LiveClock"
 import { getWalletBrand } from "@/lib/walletUtils"
 
@@ -28,13 +28,13 @@ const formatPHPCompact = (amount: number) => {
   return formatPHP(amount);
 }
 
-
-
 export default async function DashboardPage() {
   const wallets = await getWallets()
   const todaySummary = await getTodaySummary()
   const recentTxs = await getRecentTransactions(5)
-  const totalOwed = await getTotalObligations()
+  
+  const totalOwed = await getTotalDebts('BORROWED')
+  const totalCollect = await getTotalDebts('LENT')
 
   const totalExpected = wallets.reduce((sum, w) => sum + w.expected_balance, 0)
 
@@ -52,12 +52,12 @@ export default async function DashboardPage() {
     <main className="flex flex-col flex-1 w-full pb-40 bg-zinc-50 min-h-screen relative">
       
       {/* Header / Total Expected */}
-      <section className="bg-[#4A4A4A] text-white px-6 pt-10 pb-16 shadow-md rounded-b-[2.5rem] relative overflow-hidden">
+      <section className="bg-zinc-900 text-white px-6 pt-10 pb-16 shadow-lg rounded-b-[2.5rem] relative overflow-hidden z-20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         
         <LiveClock />
-        <h2 className="text-white/70 text-base font-bold uppercase tracking-widest mt-6 mb-1">Total Balance</h2>
-        <div className="text-6xl font-black tracking-tight text-white drop-shadow-sm">
+        <h2 className="text-white/70 text-sm font-black uppercase tracking-widest mt-6 mb-1">Total Expected Money</h2>
+        <div className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-sm truncate">
           {formatPHPCompact(totalExpected)}
         </div>
       </section>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Wallets (Compact Single List to save vertical space) */}
+        {/* Wallets */}
         <section className="space-y-3 mt-8">
           <div className="flex items-center gap-2 mb-2 px-1">
             <WalletIcon size={22} className="text-zinc-400" />
@@ -113,21 +113,29 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Borrowed Money Card */}
-        {totalOwed > 0 && (
-          <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform mt-8">
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1 truncate">
-                Borrowed Money
-              </div>
-              <div className="text-2xl font-black text-red-700 tracking-tighter truncate">
-                {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-200 transition-colors shrink-0">
-              <ArrowRight size={24} strokeWidth={3} />
-            </div>
-          </Link>
+        {/* Debts Section */}
+        {(totalOwed > 0 || totalCollect > 0) && (
+          <section className="grid grid-cols-2 gap-3 mt-8">
+            {totalOwed > 0 && (
+              <Link 
+                href="/obligations"
+                className="bg-red-50 border-2 border-red-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
+              >
+                <div className="text-red-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Utang Mo<br/>(To Return)</div>
+                <div className="font-extrabold text-2xl text-red-700 truncate tracking-tighter">{formatPHPCompact(totalOwed)}</div>
+              </Link>
+            )}
+            
+            {totalCollect > 0 && (
+              <Link 
+                href="/obligations?tab=lent"
+                className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-5 flex flex-col justify-between shadow-sm active:scale-95 transition-transform min-h-[120px]"
+              >
+                <div className="text-orange-600/70 text-xs font-black tracking-[0.1em] uppercase mb-1 leading-tight">Pautang<br/>(To Collect)</div>
+                <div className="font-extrabold text-2xl text-orange-700 truncate tracking-tighter">{formatPHPCompact(totalCollect)}</div>
+              </Link>
+            )}
+          </section>
         )}
 
         {/* Recent History */}

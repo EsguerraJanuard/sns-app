@@ -2,23 +2,31 @@
 
 import { supabase } from '@/lib/supabase'
 
-export async function getTotalObligations() {
+export async function getTotalDebts(type: 'BORROWED' | 'LENT' = 'BORROWED') {
   const { data: obs, error: obsError } = await supabase
     .from('obligations')
-    .select('id, original_amount')
+    .select('id, original_amount, transactions(kind)')
     .eq('status', 'open')
 
   if (obsError || !obs) return 0
+
+  // Filter based on kind. Legacy obligations (null transactions) are assumed BORROWED.
+  const filteredObs = obs.filter(o => {
+    const kind = (o.transactions as any)?.kind || 'BORROWED'
+    return kind === type
+  })
+
+  if (filteredObs.length === 0) return 0
 
   const { data: reps } = await supabase
     .from('obligation_repayments')
     .select('obligation_id, amount')
 
-  const totalOriginal = obs.reduce((sum, o) => sum + Number(o.original_amount), 0)
+  const totalOriginal = filteredObs.reduce((sum, o) => sum + Number(o.original_amount), 0)
   
   let totalRepayments = 0
   if (reps) {
-    const openIds = new Set(obs.map(o => o.id))
+    const openIds = new Set(filteredObs.map(o => o.id))
     totalRepayments = reps
       .filter(r => openIds.has(r.obligation_id))
       .reduce((sum, r) => sum + Number(r.amount), 0)
@@ -27,13 +35,18 @@ export async function getTotalObligations() {
   return totalOriginal - totalRepayments
 }
 
-export async function getActiveObligationsGrouped() {
+export async function getActiveDebtsGrouped(type: 'BORROWED' | 'LENT' = 'BORROWED') {
   const { data: obs, error: obsError } = await supabase
     .from('obligations')
-    .select('id, contact_id, original_amount, contact:contacts(id, name)')
+    .select('id, contact_id, original_amount, contact:contacts(id, name), transactions(kind)')
     .eq('status', 'open')
 
   if (obsError || !obs) return []
+
+  const filteredObs = obs.filter(o => {
+    const kind = (o.transactions as any)?.kind || 'BORROWED'
+    return kind === type
+  })
 
   const { data: reps } = await supabase
     .from('obligation_repayments')
@@ -48,7 +61,7 @@ export async function getActiveObligationsGrouped() {
 
   const grouped: Record<string, { contactId: string, name: string, total: number }> = {}
 
-  obs.forEach(ob => {
+  filteredObs.forEach(ob => {
     if (!ob.contact_id) return
     if (!grouped[ob.contact_id]) {
       grouped[ob.contact_id] = {

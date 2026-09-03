@@ -20,11 +20,13 @@ const getWalletBrand = (name: string) => {
 export default function RepaymentForm({ 
   contactId, 
   maxAmount, 
-  wallets 
+  wallets,
+  isLent
 }: { 
   contactId: string, 
   maxAmount: number, 
-  wallets: Wallet[] 
+  wallets: Wallet[],
+  isLent: boolean
 }) {
   const [amount, setAmount] = useState<string>('')
   const [walletId, setWalletId] = useState<string>(wallets[0]?.id || '')
@@ -51,6 +53,7 @@ export default function RepaymentForm({
         formData.append('contactId', contactId)
         formData.append('walletId', walletId)
         formData.append('amount', amount)
+        if (isLent) formData.append('isLent', 'true')
         
         await repayObligation(formData)
       } catch (err: any) {
