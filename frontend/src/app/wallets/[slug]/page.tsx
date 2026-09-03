@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ChevronLeft, ArrowDownRight, ArrowUpRight, Scale, Car, Smartphone, Landmark, Wallet as WalletIcon } from "lucide-react"
+import { ChevronLeft, ArrowDownRight, ArrowUpRight, Scale, Car, Smartphone, Landmark, Wallet as WalletIcon, Search } from "lucide-react"
 import { getWalletBySlug } from "@/actions/wallet-details"
 import { getRecentTransactions } from "@/actions/transaction"
 
@@ -9,6 +9,16 @@ const formatPHP = (amount: number) => {
     style: 'currency',
     currency: 'PHP',
   }).format(amount)
+}
+
+const formatPHPCompact = (amount: number) => {
+  if (amount >= 1_000_000) {
+    return '₱' + (amount / 1_000_000).toFixed(2).replace(/\.00$/, '') + 'M';
+  }
+  if (amount >= 100_000) {
+    return '₱' + (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return formatPHP(amount);
 }
 
 const getWalletBrand = (name: string) => {
@@ -48,7 +58,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
         <div>
           <h2 className={`${Brand.color} text-lg font-medium mb-1`}>Expected balance</h2>
           <div className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {formatPHP(wallet.expected_balance)}
+            {formatPHPCompact(wallet.expected_balance)}
           </div>
         </div>
       </header>
@@ -68,6 +78,21 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
 
       {/* History */}
       <section className="px-5 py-2">
+        
+        {/* Wallet Specific Search */}
+        <form action="/transactions" method="GET" className="relative mb-6">
+          <input type="hidden" name="wallet" value={wallet.id} />
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="text-zinc-400" size={20} />
+          </div>
+          <input 
+            type="text"
+            name="q"
+            placeholder={`Search ${wallet.name} history...`}
+            className="w-full bg-white text-zinc-900 rounded-2xl py-4 pl-12 pr-5 font-bold shadow-sm border border-zinc-100 focus:outline-none focus:border-zinc-300 placeholder:text-zinc-400"
+          />
+        </form>
+
         <h3 className="text-xl font-bold text-zinc-800 mb-4 px-1">Recent History</h3>
         <div className="bg-white rounded-3xl shadow-sm border border-zinc-100 overflow-hidden divide-y divide-zinc-100">
           {transactions.length === 0 ? (
@@ -76,27 +101,34 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
             transactions.map((tx: any) => {
               const isIn = tx.direction === 'IN'
               return (
-                <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
                       {isIn ? <ArrowDownRight size={24} strokeWidth={3} /> : <ArrowUpRight size={24} strokeWidth={3} />}
                     </div>
-                    <div>
-                      <div className="font-bold text-zinc-900 text-lg mb-0.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-zinc-900 text-lg mb-0.5 truncate">
                         {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                       </div>
-                      <div className="text-base text-zinc-500 font-medium">
+                      <div className="text-base text-zinc-500 font-medium truncate">
                         {tx.kind === 'BORROWED' ? 'Borrowed' : (isIn ? 'Money in' : 'Money out')}
                       </div>
                     </div>
                   </div>
-                  <div className={`text-xl font-black ${isIn ? 'text-green-600' : 'text-zinc-900'}`}>
-                    {isIn ? '+' : '-'}{formatPHP(tx.amount)}
+                  <div className={`text-xl shrink-0 font-black tracking-tighter ${isIn ? 'text-green-600' : 'text-zinc-900'}`}>
+                    {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                   </div>
                 </div>
               )
             })
           )}
+          
+          <Link 
+            href={`/transactions?wallet=${wallet.id}`}
+            className="block w-full p-5 text-center bg-zinc-50 hover:bg-zinc-100 text-zinc-500 font-black uppercase tracking-widest text-sm transition-colors"
+          >
+            View All History
+          </Link>
         </div>
       </section>
     </div>

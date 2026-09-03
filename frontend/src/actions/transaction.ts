@@ -137,3 +137,53 @@ export async function getTodaySummary() {
 
   return { in: totalIn, out: totalOut }
 }
+
+export async function searchTransactions(params: {
+  query?: string,
+  dateFrom?: string,
+  dateTo?: string,
+  walletId?: string
+}) {
+  let q = supabase
+    .from('transactions')
+    .select(`
+      *,
+      wallet:wallets(name, slug),
+      contact:contacts(name)
+    `)
+    .eq('status', 'active')
+    .order('occurred_at', { ascending: false })
+
+  if (params.walletId) {
+    q = q.eq('wallet_id', params.walletId)
+  }
+  
+  if (params.dateFrom) {
+    q = q.gte('occurred_at', params.dateFrom + 'T00:00:00.000Z')
+  }
+  
+  if (params.dateTo) {
+    q = q.lte('occurred_at', params.dateTo + 'T23:59:59.999Z')
+  }
+
+  const { data, error } = await q
+
+  if (error || !data) {
+    console.error('Error searching transactions:', error)
+    return []
+  }
+
+  let results = data
+
+  if (params.query) {
+    const search = params.query.toLowerCase()
+    results = results.filter((tx: any) => {
+      const matchName = tx.contact?.name?.toLowerCase().includes(search)
+      const matchAmount = tx.amount.toString().includes(search)
+      const matchNote = tx.note?.toLowerCase().includes(search)
+      return matchName || matchAmount || matchNote
+    })
+  }
+
+  return results
+}
