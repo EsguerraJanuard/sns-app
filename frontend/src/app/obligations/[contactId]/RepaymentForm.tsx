@@ -64,8 +64,18 @@ export default function RepaymentForm({
 
   // Handle amount formatting while typing
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^0-9.]/g, '')
-    setAmount(raw)
+    let raw = e.target.value.replace(/[^0-9.]/g, '')
+    const parts = raw.split('.')
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('')
+    if (parts[1] && parts[1].length > 2) raw = `${parts[0]}.${parts[1].slice(0, 2)}`
+    
+    if (raw) {
+      const p = raw.split('.')
+      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      setAmount(p.join('.'))
+    } else {
+      setAmount('')
+    }
   }
 
   return (
@@ -73,7 +83,9 @@ export default function RepaymentForm({
       
       {/* Amount Input */}
       <div>
-        <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">Amount to Repay</label>
+        <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">
+          {isLent ? 'Amount Paid by Customer' : 'Amount to Repay'}
+        </label>
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl font-black text-zinc-400">₱</div>
           <input
@@ -82,20 +94,26 @@ export default function RepaymentForm({
             placeholder="0.00"
             value={amount}
             onChange={handleAmountChange}
-            className="w-full bg-zinc-50 border-2 border-zinc-200 rounded-2xl py-5 pl-12 pr-5 text-4xl font-black text-zinc-900 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-zinc-300"
+            className={`w-full bg-zinc-50 border-2 border-zinc-200 rounded-2xl py-5 pl-12 pr-5 text-4xl font-black text-zinc-900 focus:outline-none focus:ring-4 transition-all placeholder:text-zinc-300 ${isLent ? 'focus:border-orange-500 focus:ring-orange-100' : 'focus:border-red-500 focus:ring-red-100'}`}
             required
           />
         </div>
         <div className="mt-3 flex gap-2">
-          <button type="button" onClick={() => setAmount(maxAmount.toString())} className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-red-100 text-red-600 active:scale-95 transition-transform">
-            Pay Full Amount
+          <button 
+            type="button" 
+            onClick={() => setAmount(maxAmount.toLocaleString())} 
+            className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full active:scale-95 transition-transform ${isLent ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}
+          >
+            {isLent ? 'Received Full Amount' : 'Pay Full Amount'}
           </button>
         </div>
       </div>
 
       {/* Wallet Selection */}
       <div>
-        <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">Take money from</label>
+        <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest mb-3">
+          {isLent ? 'Deposit to' : 'Take money from'}
+        </label>
         <div className="flex flex-col gap-3">
           {wallets.map(w => {
             const Brand = getWalletBrand(w.name)
@@ -135,12 +153,12 @@ export default function RepaymentForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full bg-zinc-900 text-white rounded-2xl py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-transform flex items-center justify-center disabled:opacity-70"
+        className={`w-full text-white rounded-2xl py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-transform flex items-center justify-center disabled:opacity-70 ${isLent ? 'bg-orange-500' : 'bg-zinc-900'}`}
       >
         {isPending ? (
           <Loader2 size={28} className="animate-spin" />
         ) : (
-          'Save Repayment'
+          isLent ? 'Save Collection' : 'Save Repayment'
         )}
       </button>
 
