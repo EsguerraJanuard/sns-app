@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowDownRight, ArrowUpRight, Search, CheckCircle2, Wallet as WalletIcon, ChevronLeft, Car, Smartphone, Landmark, AlertCircle, AlertTriangle } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Search, CheckCircle2, Wallet as WalletIcon, ChevronLeft, Car, Smartphone, Landmark, AlertCircle, AlertTriangle, Receipt, XCircle, DollarSign } from 'lucide-react'
 import { Wallet } from '@/actions/wallet'
 import { searchContacts } from '@/actions/contact'
 import { createTransaction } from '@/actions/transaction'
@@ -463,38 +463,39 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
           </label>
           <div className="grid grid-cols-2 gap-2">
             
-            <label className={`
-              col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
-              ${(!exchangeWalletId && !isCustomerDebt && !isBorrowed) ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
-            `}>
-              <input 
-                type="radio" 
-                name="exchangeWallet" 
-                value="" 
-                checked={!exchangeWalletId && !isCustomerDebt && !isBorrowed} 
-                onChange={() => {
-                  setExchangeWalletId('')
-                  if (direction === 'OUT') {
-                    setIsExpense(true)
+            {/* TOP BIG BUTTON: ALWAYS CASH (Hide if Source is already Cash) */}
+            {walletId !== wallets.find(w => w.slug === 'cash')?.id && (
+              <label className={`
+                col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                ${exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
+              `}>
+                <input 
+                  type="radio" 
+                  name="exchangeWallet" 
+                  value={wallets.find(w => w.slug === 'cash')?.id || ''} 
+                  checked={exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id} 
+                  onChange={() => {
+                    const cashId = wallets.find(w => w.slug === 'cash')?.id || ''
+                    setExchangeWalletId(cashId)
+                    setIsExpense(false)
                     setIsCustomerDebt(false)
-                  } else {
                     setIsBorrowed(false)
-                  }
-                }} 
-                className="sr-only" 
-              />
-              <div className="flex flex-col items-center gap-1 w-full">
-                <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
-                  {direction === 'OUT' ? 'EXPENSE / BILLS' : 'REGULAR INCOME'}
-                </span>
-                <span className={`text-[10px] font-bold text-center w-full uppercase tracking-widest ${(!exchangeWalletId && !isCustomerDebt && !isBorrowed) ? 'text-zinc-400' : 'text-zinc-300'}`}>
-                  {direction === 'OUT' ? 'Hindi na iikot' : 'Diretso sa wallet'}
-                </span>
-              </div>
-            </label>
+                  }} 
+                  className="sr-only" 
+                />
+                <div className="flex flex-col items-center gap-1 w-full">
+                  <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
+                    CASH
+                  </span>
+                  <span className={`text-[10px] font-bold text-center w-full uppercase tracking-widest ${exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id ? 'text-zinc-400' : 'text-zinc-300'}`}>
+                    Pisikal na Pera
+                  </span>
+                </div>
+              </label>
+            )}
             
-            {wallets.filter(w => w.id !== walletId).map((w, index, filteredArray) => {
-              const isLastOdd = index === filteredArray.length - 1 && filteredArray.length % 2 !== 0;
+            {/* OTHER WALLETS (Except Source and Cash) */}
+            {wallets.filter(w => w.id !== walletId && w.slug !== 'cash').map((w, index, filteredArray) => {
               const Brand = getWalletBrand(w.name);
               const isSelected = exchangeWalletId === w.id;
               
@@ -502,7 +503,6 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 <label key={w.id} className={`
                   relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
                   ${isSelected ? `bg-white ${Brand.border} ${Brand.shadow} shadow-md` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
-                  ${isLastOdd ? 'col-span-2' : ''}
                 `}>
                   <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => {
                     setExchangeWalletId(w.id)
@@ -519,6 +519,39 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 </label>
               )
             })}
+            
+            {/* SPECIAL CARD: EXPENSES (OUT) or WALA (IN) */}
+            <label className={`
+              relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+              ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-800 text-white shadow-md border-zinc-800' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50'}
+              ${(wallets.filter(w => w.id !== walletId && w.slug !== 'cash').length % 2 === 0) ? 'col-span-2' : ''} 
+            `}>
+              <input 
+                type="radio" 
+                name="exchangeWallet" 
+                value="" 
+                checked={!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)} 
+                onChange={() => {
+                  setExchangeWalletId('')
+                  if (direction === 'OUT') {
+                    setIsExpense(true)
+                    setIsCustomerDebt(false)
+                  } else {
+                    setIsBorrowed(false)
+                  }
+                }} 
+                className="sr-only" 
+              />
+              <div className="flex flex-col items-center gap-2 w-full">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-400'} transition-colors`}>
+                  {direction === 'OUT' ? <Receipt size={20} strokeWidth={2.5} /> : <XCircle size={20} strokeWidth={2.5} />}
+                </div>
+                <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'font-black text-white' : 'font-bold text-zinc-400'}`}>
+                  {direction === 'OUT' ? 'EXPENSES' : 'WALA'}
+                </span>
+              </div>
+            </label>
+
           </div>
           
           {exchangeWalletId && (
