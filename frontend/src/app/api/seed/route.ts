@@ -33,6 +33,7 @@ export async function GET(req: Request) {
 
     // 2. Create random transactions
     const txs = []
+    const obs = []
     const now = new Date()
     
     // Generate ~35 transactions over the last 7 days
@@ -44,14 +45,26 @@ export async function GET(req: Request) {
       
       const occurredAt = new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000) // random past 7 days
 
+      // 10% chance it's borrowed money if it's incoming
+      const isBorrowed = !isOut && Math.random() > 0.8 && contact
+      
       txs.push({
         wallet_id: wallet.id,
-        contact_id: Math.random() > 0.2 ? contact : null, // 80% chance to have a contact
+        contact_id: Math.random() > 0.2 || isBorrowed ? contact : null, // 80% chance to have a contact, 100% if borrowed
         amount,
         direction: isOut ? 'OUT' : 'IN',
-        kind: 'REGULAR',
+        kind: isBorrowed ? 'BORROWED' : 'REGULAR',
         occurred_at: occurredAt.toISOString(),
       })
+
+      if (isBorrowed) {
+        obs.push({
+          contact_id: contact,
+          original_amount: amount,
+          remaining_amount: amount, // for simplicity in seed, no partial payments
+          status: 'ACTIVE'
+        })
+      }
     }
 
     // Add a couple of really large transactions to test the "k" and "M" formatting
@@ -73,8 +86,12 @@ export async function GET(req: Request) {
     })
 
     await supabase.from('transactions').insert(txs)
+    if (obs.length > 0) {
+      await supabase.from('obligations').insert(obs)
+    }
 
-    return NextResponse.json({ message: 'Successfully seeded ~35 random transactions and contacts!' })
+    return NextResponse.json({ message: 'Successfully seeded ~35 random transactions and contacts (including Borrowed Money)!' })
+
   }
 
   return NextResponse.json({ usage: 'Add ?action=populate to seed data, or ?action=reset to clear everything.' })

@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History } from "lucide-react"
+import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History, ArrowRight } from "lucide-react"
 import { getWallets, Wallet } from "@/actions/wallet"
 import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
+import { getTotalObligations } from "@/actions/obligation"
 import LiveClock from "@/components/LiveClock"
 
 const formatPHP = (amount: number) => {
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
   const wallets = await getWallets()
   const todaySummary = await getTodaySummary()
   const recentTxs = await getRecentTransactions(5)
+  const totalOwed = await getTotalObligations()
 
   const totalExpected = wallets.reduce((sum, w) => sum + w.expected_balance, 0)
 
@@ -80,6 +82,23 @@ export default async function DashboardPage() {
             <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
+
+        {/* Borrowed Money Card */}
+        {totalOwed > 0 && (
+          <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform">
+            <div>
+              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1">
+                Borrowed Money
+              </div>
+              <div className="text-2xl font-black text-red-700 tracking-tighter">
+                {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-200 transition-colors shrink-0">
+              <ArrowRight size={24} strokeWidth={3} />
+            </div>
+          </Link>
+        )}
 
         {/* Wallets (Compact Single List to save vertical space) */}
         <section className="space-y-3">
