@@ -88,25 +88,8 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Borrowed Money Card */}
-        {totalOwed > 0 && (
-          <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform">
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1 truncate">
-                Borrowed Money
-              </div>
-              <div className="text-2xl font-black text-red-700 tracking-tighter truncate">
-                {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-200 transition-colors shrink-0">
-              <ArrowRight size={24} strokeWidth={3} />
-            </div>
-          </Link>
-        )}
-
         {/* Wallets (Compact Single List to save vertical space) */}
-        <section className="space-y-3">
+        <section className="space-y-3 mt-8">
           <div className="flex items-center gap-2 mb-2 px-1">
             <WalletIcon size={22} className="text-zinc-400" />
             <h3 className="text-base font-bold text-zinc-500 uppercase tracking-widest">Wallets</h3>
@@ -135,6 +118,23 @@ export default async function DashboardPage() {
             })}
           </div>
         </section>
+
+        {/* Borrowed Money Card */}
+        {totalOwed > 0 && (
+          <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform mt-8">
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1 truncate">
+                Borrowed Money
+              </div>
+              <div className="text-2xl font-black text-red-700 tracking-tighter truncate">
+                {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center group-hover:bg-red-200 transition-colors shrink-0">
+              <ArrowRight size={24} strokeWidth={3} />
+            </div>
+          </Link>
+        )}
 
         {/* Recent History */}
         <section className="space-y-3 pt-2">
