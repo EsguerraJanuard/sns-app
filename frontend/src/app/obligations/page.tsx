@@ -81,10 +81,9 @@ export default async function ObligationsPage() {
                   <div className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-900 shrink-0">
                     {formatPHPCompact(ob.total)}
                   </div>
-                  {/* TODO: Add repayment button/link here when we build repayment feature */}
-                  <button className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors shrink-0">
+                  <Link href={`/obligations/${ob.contactId}`} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors shrink-0">
                     <ArrowRight size={20} strokeWidth={3} />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))
