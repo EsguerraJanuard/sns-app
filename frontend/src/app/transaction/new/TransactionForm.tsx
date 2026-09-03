@@ -449,49 +449,92 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         {/* EXCHANGE / KAPALIT WALLET */}
         <section className="space-y-2 mt-6">
           <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">
-            Kabilang Wallet <span className="font-normal normal-case ml-1 text-xs">(Optional for Cash-In/Out)</span>
+            Patutunguhan / Destination
           </label>
-          <div className="bg-white rounded-3xl border border-zinc-100 p-2 shadow-sm space-y-2">
-            <select 
-              value={exchangeWalletId}
-              onChange={(e) => setExchangeWalletId(e.target.value)}
-              className="w-full bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-4 text-lg font-bold text-zinc-700 focus:outline-none focus:border-zinc-300"
-            >
-              <option value="">[ None / Walang Kapalit ]</option>
-              {wallets.filter(w => w.id !== walletId).map(w => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-2">
             
-            {exchangeWalletId && (
-              <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-3">
+            <label className={`
+              col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+              ${!exchangeWalletId ? 'bg-zinc-800 text-white border-zinc-800 font-bold shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
+            `}>
+              <input type="radio" name="exchangeWallet" value="" checked={!exchangeWalletId} onChange={() => setExchangeWalletId('')} className="sr-only" />
+              <span className="text-base font-black uppercase tracking-widest leading-tight">Walang Kapalit</span>
+            </label>
+            
+            {wallets.map((w, index) => {
+              if (w.id === walletId) return null;
+              
+              // We need to recalculate odd/even based on filtered list to apply col-span-2 if needed
+              const filteredWallets = wallets.filter(fw => fw.id !== walletId);
+              const isLastOdd = index === wallets.length - 1 && filteredWallets.length % 2 !== 0;
+              
+              const Brand = getWalletBrand(w.name);
+              const isSelected = exchangeWalletId === w.id;
+              
+              return (
+                <label key={w.id} className={`
+                  relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                  ${isSelected ? `bg-white ${Brand.border} ${Brand.shadow} shadow-md` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
+                  ${isLastOdd ? 'col-span-2' : ''}
+                `}>
+                  <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => setExchangeWalletId(w.id)} className="sr-only" />
+                  <div className="flex flex-col items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
+                      <Brand.icon size={20} strokeWidth={2.5} />
+                    </div>
+                    <span className={`text-base uppercase tracking-widest transition-colors ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+          
+          {exchangeWalletId && (
+            <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
+                
+                {/* Quick Fee Buttons */}
+                <div>
+                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Quick Fee (Discount)</div>
+                  <div className="flex flex-wrap gap-2">
+                    {[0, 5, 10, 15, 20, 25, 30].map(val => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setExchangeFee(val.toString())}
+                        className={`px-3 py-1.5 rounded-xl text-sm font-black transition-all border-2 active:scale-95 ${exchangeFee === val.toString() ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                      >
+                        ₱{val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
                   <input 
                     type="number"
                     value={exchangeFee}
                     onChange={(e) => setExchangeFee(e.target.value)}
-                    className="w-full bg-white rounded-xl border border-zinc-200 px-3 py-2 text-xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-white rounded-xl border-2 border-zinc-200 px-4 py-3 text-2xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors"
                     placeholder="0"
                   />
                 </div>
                 
-                <div className="text-xs font-bold text-zinc-500 space-y-1">
+                <div className="text-xs font-bold text-zinc-500 space-y-1.5 bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
                   {direction === 'OUT' ? (
                     <>
-                      <div className="text-red-500">- ₱{amount || 0} mula sa {selectedWalletName || 'E-Wallet'}</div>
-                      <div className="text-green-500">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)} papasok sa {wallets.find(w => w.id === exchangeWalletId)?.name}</div>
+                      <div className="flex justify-between text-red-500"><span>Mula sa {selectedWalletName || 'E-Wallet'}</span> <span>- ₱{amount || 0}</span></div>
+                      <div className="flex justify-between text-green-600 font-black"><span>Papasok sa {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span></div>
                     </>
                   ) : (
                     <>
-                      <div className="text-green-500">+ ₱{amount || 0} papasok sa {selectedWalletName || 'E-Wallet'}</div>
-                      <div className="text-red-500">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)} mula sa {wallets.find(w => w.id === exchangeWalletId)?.name}</div>
+                      <div className="flex justify-between text-green-600 font-black"><span>Papasok sa {selectedWalletName || 'E-Wallet'}</span> <span>+ ₱{amount || 0}</span></div>
+                      <div className="flex justify-between text-red-500"><span>Mula sa {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span></div>
                     </>
                   )}
                 </div>
               </div>
             )}
-          </div>
         </section>
 
         {direction === 'IN' && (
@@ -540,8 +583,8 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               ${isExpense ? 'bg-purple-50 border-purple-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
             `}>
               <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isExpense ? 'text-purple-700' : 'text-zinc-700'}`}>Expense / Gastos</p>
-                <p className={`text-sm font-medium ${isExpense ? 'text-purple-600/70' : 'text-zinc-400'}`}>Check mo kung pinangbayad ng bills (Kuryente, etc)</p>
+                <p className={`text-lg font-black truncate ${isExpense ? 'text-purple-700' : 'text-zinc-700'}`}>Gastos / Bills</p>
+                <p className={`text-sm font-medium ${isExpense ? 'text-purple-600/70' : 'text-zinc-400'}`}>Hindi na iikot ang pera (Kuryente, etc)</p>
               </div>
               <input 
                 type="checkbox" 

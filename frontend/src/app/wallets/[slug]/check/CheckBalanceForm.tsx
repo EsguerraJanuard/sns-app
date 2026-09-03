@@ -173,7 +173,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
               setIsSubmitting(false)
             }}
             disabled={isSubmitting}
-            className={`w-full bg-white border-2 ${Brand.border} ${Brand.buttonColor} text-xl font-bold py-4 rounded-[1.5rem] shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2`}
+            className={`w-full bg-white border-2 border-zinc-200 ${Brand.buttonColor} text-xl font-bold py-4 rounded-[1.5rem] shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2`}
           >
             <CheckCircle2 size={24} strokeWidth={2.5} />
             Sakto ang laman!

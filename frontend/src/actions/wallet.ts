@@ -9,6 +9,7 @@ export type Wallet = {
   slug: string
   opening_balance: number
   sort_order: number
+  is_active?: boolean
 }
 
 export type WalletWithBalance = Wallet & { expected_balance: number }
