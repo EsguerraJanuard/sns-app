@@ -520,7 +520,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               )
             })}
             
-            {/* SPECIAL CARD: EXPENSES (OUT) or WALA (IN) */}
+            {/* SPECIAL CARD: EXPENSES */}
             <label className={`
               relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
               ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-800 text-white shadow-md border-zinc-800' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50'}
@@ -544,10 +544,10 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               />
               <div className="flex flex-col items-center gap-2 w-full">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-400'} transition-colors`}>
-                  {direction === 'OUT' ? <Receipt size={20} strokeWidth={2.5} /> : <XCircle size={20} strokeWidth={2.5} />}
+                  <Receipt size={20} strokeWidth={2.5} />
                 </div>
                 <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'font-black text-white' : 'font-bold text-zinc-400'}`}>
-                  {direction === 'OUT' ? 'EXPENSES' : 'WALA'}
+                  EXPENSE / BILLS
                 </span>
               </div>
             </label>
