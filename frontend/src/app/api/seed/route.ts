@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 
 const NAMES = ['Maria Santos', 'Juan Cruz', 'Supplier Auto', 'Tita Baby', 'Customer', 'Luzviminda', 'Kumpareng Boy']
@@ -13,6 +14,7 @@ export async function GET(req: Request) {
     await supabase.from('obligations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('contacts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ message: 'Database wiped clean! Balances are back to zero.' })
   }
   
@@ -61,8 +63,7 @@ export async function GET(req: Request) {
         obs.push({
           contact_id: contact,
           original_amount: amount,
-          remaining_amount: amount, // for simplicity in seed, no partial payments
-          status: 'ACTIVE'
+          status: 'open'
         })
       }
     }
@@ -85,10 +86,28 @@ export async function GET(req: Request) {
       occurred_at: now.toISOString()
     })
 
+    // GUARANTEE a borrowed transaction
+    const forcedContact = contacts[Math.floor(Math.random() * contacts.length)]
+    txs.push({
+      wallet_id: wallets[0].id,
+      contact_id: forcedContact,
+      amount: 7500,
+      direction: 'IN',
+      kind: 'BORROWED',
+      occurred_at: now.toISOString()
+    })
+    obs.push({
+      contact_id: forcedContact,
+      original_amount: 7500,
+      status: 'open'
+    })
+
     await supabase.from('transactions').insert(txs)
     if (obs.length > 0) {
       await supabase.from('obligations').insert(obs)
     }
+
+    revalidatePath('/', 'layout')
 
     return NextResponse.json({ message: 'Successfully seeded ~35 random transactions and contacts (including Borrowed Money)!' })
 

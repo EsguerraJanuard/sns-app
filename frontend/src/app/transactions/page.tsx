@@ -174,7 +174,7 @@ export default async function TransactionsPage({
                       
                       {/* Details */}
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight truncate">
+                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
                           {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
                         <div className="text-base font-bold text-zinc-400 flex flex-wrap items-center gap-1.5 truncate">

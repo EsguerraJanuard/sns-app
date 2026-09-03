@@ -107,7 +107,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
                       {isIn ? <ArrowDownRight size={24} strokeWidth={3} /> : <ArrowUpRight size={24} strokeWidth={3} />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-zinc-900 text-lg mb-0.5 truncate">
+                      <div className="font-bold text-zinc-900 text-lg mb-0.5 break-words">
                         {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                       </div>
                       <div className="text-base text-zinc-500 font-medium truncate">

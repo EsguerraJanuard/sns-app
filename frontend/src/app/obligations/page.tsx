@@ -2,6 +2,9 @@ import Link from "next/link"
 import { ChevronLeft, Landmark, ArrowDownRight, ArrowRight } from "lucide-react"
 import { getActiveObligationsGrouped } from "@/actions/obligation"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const formatPHPCompact = (amount: number) => {
   if (amount >= 1_000_000) {
     return '₱' + (amount / 1_000_000).toFixed(2).replace(/\.00$/, '') + 'M';

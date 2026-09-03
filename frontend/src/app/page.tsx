@@ -5,10 +5,15 @@ import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
 import { getTotalObligations } from "@/actions/obligation"
 import LiveClock from "@/components/LiveClock"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const formatPHP = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2
   }).format(amount)
 }
 
@@ -72,25 +77,25 @@ export default async function DashboardPage() {
               <ArrowDownRight size={16} className="text-green-500" strokeWidth={3} />
               TODAY IN
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
           </div>
           <div className="flex-1 pl-4 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight size={16} className="text-blue-500" strokeWidth={3} />
               TODAY OUT
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
 
         {/* Borrowed Money Card */}
         {totalOwed > 0 && (
           <Link href="/obligations" className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-100 flex items-center justify-between group active:scale-[0.98] transition-transform">
-            <div>
-              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1">
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-red-500 uppercase tracking-widest mb-1 truncate">
                 Borrowed Money
               </div>
-              <div className="text-2xl font-black text-red-700 tracking-tighter">
+              <div className="text-2xl font-black text-red-700 tracking-tighter truncate">
                 {formatPHPCompact(totalOwed)} <span className="text-lg font-bold opacity-70">to return</span>
               </div>
             </div>
@@ -116,15 +121,15 @@ export default async function DashboardPage() {
                 <Link 
                   key={wallet.id} 
                   href={`/wallets/${wallet.slug}`}
-                  className="p-4 sm:p-5 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors"
+                  className="p-4 sm:p-5 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${Brand.bg} ${Brand.color}`}>
                       <Icon size={24} strokeWidth={2.5} />
                     </div>
-                    <div className="text-lg font-bold text-zinc-600 uppercase tracking-wide">{wallet.name}</div>
+                    <div className="text-lg font-bold text-zinc-600 uppercase tracking-wide truncate">{wallet.name}</div>
                   </div>
-                  <div className="text-2xl font-black text-zinc-900">{formatPHPCompact(wallet.expected_balance)}</div>
+                  <div className="text-2xl font-black text-zinc-900 shrink-0 text-right">{formatPHPCompact(wallet.expected_balance)}</div>
                 </Link>
               )
             })}
@@ -156,7 +161,7 @@ export default async function DashboardPage() {
                       
                       {/* Details */}
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight">
+                        <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
                           {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
                         <div className="text-base font-bold text-zinc-400 flex items-center gap-1.5 flex-wrap">
