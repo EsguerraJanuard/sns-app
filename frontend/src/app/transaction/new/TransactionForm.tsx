@@ -282,16 +282,14 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
           </label>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 pb-safe z-40">
-          <div className="max-w-[400px] mx-auto">
-            <button
-              onClick={executeSubmit}
-              disabled={!confirmChecked || isSubmitting}
-              className={`w-full ${confirmChecked ? 'bg-zinc-900' : 'bg-zinc-200'} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
-            >
-              {isSubmitting ? 'Saving...' : 'Confirm & Save'}
-            </button>
-          </div>
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
+          <button
+            onClick={executeSubmit}
+            disabled={!confirmChecked || isSubmitting}
+            className={`w-full ${confirmChecked ? 'bg-zinc-900' : 'bg-zinc-300'} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl shadow-zinc-900/20`}
+          >
+            {isSubmitting ? 'Saving...' : 'CONFIRM & SAVE'}
+          </button>
         </div>
       </div>
     )
@@ -467,10 +465,32 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
             
             <label className={`
               col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
-              ${!exchangeWalletId ? 'bg-zinc-800 text-white border-zinc-800 font-bold shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
+              ${(!exchangeWalletId && !isCustomerDebt && !isBorrowed) ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
             `}>
-              <input type="radio" name="exchangeWallet" value="" checked={!exchangeWalletId} onChange={() => setExchangeWalletId('')} className="sr-only" />
-              <span className="text-base font-black uppercase tracking-widest leading-tight">WALA</span>
+              <input 
+                type="radio" 
+                name="exchangeWallet" 
+                value="" 
+                checked={!exchangeWalletId && !isCustomerDebt && !isBorrowed} 
+                onChange={() => {
+                  setExchangeWalletId('')
+                  if (direction === 'OUT') {
+                    setIsExpense(true)
+                    setIsCustomerDebt(false)
+                  } else {
+                    setIsBorrowed(false)
+                  }
+                }} 
+                className="sr-only" 
+              />
+              <div className="flex flex-col items-center gap-1 w-full">
+                <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
+                  {direction === 'OUT' ? 'EXPENSE / BILLS' : 'REGULAR INCOME'}
+                </span>
+                <span className={`text-[10px] font-bold text-center w-full uppercase tracking-widest ${(!exchangeWalletId && !isCustomerDebt && !isBorrowed) ? 'text-zinc-400' : 'text-zinc-300'}`}>
+                  {direction === 'OUT' ? 'Hindi na iikot' : 'Diretso sa wallet'}
+                </span>
+              </div>
             </label>
             
             {wallets.filter(w => w.id !== walletId).map((w, index, filteredArray) => {
@@ -484,7 +504,12 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                   ${isSelected ? `bg-white ${Brand.border} ${Brand.shadow} shadow-md` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
                   ${isLastOdd ? 'col-span-2' : ''}
                 `}>
-                  <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => setExchangeWalletId(w.id)} className="sr-only" />
+                  <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => {
+                    setExchangeWalletId(w.id)
+                    setIsExpense(false)
+                    setIsCustomerDebt(false)
+                    setIsBorrowed(false)
+                  }} className="sr-only" />
                   <div className="flex flex-col items-center gap-2 w-full">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
                       <Brand.icon size={20} strokeWidth={2.5} />
@@ -561,7 +586,10 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
               <input 
                 type="checkbox" 
                 checked={isBorrowed}
-                onChange={(e) => setIsBorrowed(e.target.checked)}
+                onChange={(e) => {
+                  setIsBorrowed(e.target.checked)
+                  if (e.target.checked) setExchangeWalletId('')
+                }}
                 className="w-7 h-7 rounded-lg border-zinc-300 text-red-600 focus:ring-red-500 bg-white"
               />
             </label>
@@ -583,43 +611,25 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
                 checked={isCustomerDebt}
                 onChange={(e) => {
                   setIsCustomerDebt(e.target.checked)
-                  if (e.target.checked) setIsExpense(false)
+                  if (e.target.checked) {
+                    setIsExpense(false)
+                    setExchangeWalletId('')
+                  }
                 }}
                 className="w-7 h-7 rounded-lg border-zinc-300 text-orange-600 focus:ring-orange-500 bg-white"
-              />
-            </label>
-
-            <label className={`
-              flex items-center gap-4 p-5 rounded-2xl border cursor-pointer transition-colors
-              ${isExpense ? 'bg-purple-50 border-purple-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
-            `}>
-              <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isExpense ? 'text-purple-700' : 'text-zinc-700'}`}>Gastos / Bills</p>
-                <p className={`text-sm font-medium ${isExpense ? 'text-purple-600/70' : 'text-zinc-400'}`}>Hindi na iikot ang pera (Kuryente, etc)</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={isExpense}
-                onChange={(e) => {
-                  setIsExpense(e.target.checked)
-                  if (e.target.checked) setIsCustomerDebt(false)
-                }}
-                className="w-7 h-7 rounded-lg border-zinc-300 text-purple-600 focus:ring-purple-500 bg-white"
               />
             </label>
           </section>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 pb-safe z-40">
-        <div className="max-w-[400px] mx-auto">
-          <button
-            type="submit"
-            className="w-full bg-zinc-900 text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-          >
-            Review Transaction
-          </button>
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
+        <button
+          type="submit"
+          className="w-full bg-zinc-900 text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl shadow-zinc-900/20"
+        >
+          REVIEW TRANSACTION
+        </button>
       </div>
     </form>
   )
