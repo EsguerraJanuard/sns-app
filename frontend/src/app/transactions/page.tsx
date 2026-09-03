@@ -179,7 +179,7 @@ export default async function TransactionsPage({
                     </div>
                     
                     {/* Amount */}
-                    <div className={`text-2xl shrink-0 font-black tracking-tighter ${isIn ? 'text-green-600' : 'text-zinc-900'}`}>
+                    <div className={`text-2xl shrink-0 font-black tracking-tighter ${color}`}>
                       {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                     </div>
                   </div>

@@ -115,7 +115,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
                       </div>
                     </div>
                   </div>
-                  <div className={`text-xl shrink-0 font-black tracking-tighter ${isIn ? 'text-green-600' : 'text-zinc-900'}`}>
+                  <div className="text-xl shrink-0 font-black tracking-tighter text-zinc-900">
                     {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                   </div>
                 </div>
