@@ -67,15 +67,17 @@ export default async function DashboardPage() {
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-100">
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+              <ArrowDownRight size={16} className="text-green-500" strokeWidth={3} />
               TODAY IN
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">+{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
           </div>
           <div className="flex-1 pl-4 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+              <ArrowUpRight size={16} className="text-blue-500" strokeWidth={3} />
               TODAY OUT
             </div>
-            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">-{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
 
