@@ -100,25 +100,32 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
           ) : (
             transactions.map((tx: any) => {
               const isIn = tx.direction === 'IN'
+              const dateStr = new Date(tx.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
               return (
-                <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
+                <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3 block">
                   <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                      {isIn ? <ArrowDownRight size={24} strokeWidth={3} /> : <ArrowUpRight size={24} strokeWidth={3} />}
+                    <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                      {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-zinc-900 text-lg mb-0.5 break-words">
+                      <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
                         {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                       </div>
-                      <div className="text-base text-zinc-500 font-medium truncate">
-                        {tx.kind === 'BORROWED' ? 'Borrowed' : (isIn ? 'Money in' : 'Money out')}
+                      <div className="text-base font-bold text-zinc-400 flex flex-wrap items-center gap-1.5 truncate">
+                        <span>{dateStr}</span>
+                        {tx.kind === 'BORROWED' && (
+                          <>
+                            <span>•</span>
+                            <span className="text-red-500">Borrowed</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xl shrink-0 font-black tracking-tighter text-zinc-900">
+                  <div className="text-2xl shrink-0 font-black tracking-tighter text-zinc-900">
                     {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                   </div>
-                </div>
+                </Link>
               )
             })
           )}

@@ -152,7 +152,7 @@ export default async function DashboardPage() {
                 const wBrand = getWalletBrand(tx.wallet?.name || '')
                 
                 return (
-                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
+                  <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
                       <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
                     <div className={`text-2xl shrink-0 font-black tracking-tighter ${wBrand.color}`}>
                       {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                     </div>
-                  </div>
+                  </Link>
                 )
               })
             )}

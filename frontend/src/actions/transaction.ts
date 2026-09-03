@@ -9,8 +9,23 @@ export type TransactionInput = {
   contact_name?: string
   amount: number
   direction: 'IN' | 'OUT'
-  kind: 'REGULAR' | 'BORROWED' | 'REPAYMENT' | 'TRANSFER' | 'ADJUSTMENT'
+  kind: 'REGULAR' | 'BORROWED' | 'REPAYMENT' | 'TRANSFER' | 'ADJUSTMENT' | 'EXPENSE'
   note?: string
+}
+
+export async function getTransaction(id: string) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select(`
+      *,
+      wallet:wallets(name, slug),
+      contact:contacts(name)
+    `)
+    .eq('id', id)
+    .single()
+    
+  if (error) return null
+  return data
 }
 
 export async function createTransaction(input: TransactionInput) {

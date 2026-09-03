@@ -158,14 +158,12 @@ export default async function TransactionsPage({
                 
                 const dateStr = new Intl.DateTimeFormat('en-PH', { 
                   month: 'short', day: 'numeric', year: 'numeric' 
-                }).format(new Date(tx.occurred_at))
-
-                // If the user filtered by a specific wallet, amounts are unconditionally black.
-                // Otherwise, they are color-coded by the wallet brand.
+                const showWalletBadge = !isFiltered
+                const isMixedList = !isFiltered
                 const amountColor = isFiltered ? 'text-zinc-900' : wBrand.color
 
                 return (
-                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
+                  <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3 block">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
                       <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
@@ -177,25 +175,24 @@ export default async function TransactionsPage({
                         <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight break-words">
                           {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
-                        <div className="text-base font-bold text-zinc-400 flex flex-wrap items-center gap-1.5 truncate">
-                          <span className={wBrand.color}>{tx.wallet?.name || 'Unknown'}</span>
-                          <span>•</span>
-                          <span>{dateStr}</span>
-                          {tx.kind === 'BORROWED' && (
-                            <>
-                              <span>•</span>
-                              <span className="text-red-500">Borrowed</span>
-                            </>
+                        <div className="flex items-center gap-2">
+                          {showWalletBadge && (
+                            <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${wBrand.bg} ${wBrand.color} bg-opacity-10`}>
+                              {tx.wallet?.name}
+                            </span>
                           )}
+                          <span className="text-sm font-bold text-zinc-400">
+                            {new Date(tx.occurred_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
                         </div>
                       </div>
                     </div>
                     
                     {/* Amount */}
-                    <div className={`text-2xl shrink-0 font-black tracking-tighter ${amountColor}`}>
+                    <div className={`text-2xl font-black tracking-tighter shrink-0 text-right ${isMixedList ? amountColor : 'text-zinc-900'}`}>
                       {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                     </div>
-                  </div>
+                  </Link>
                 )
               })
             )}
