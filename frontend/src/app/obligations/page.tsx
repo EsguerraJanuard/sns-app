@@ -15,6 +15,8 @@ const formatPHPCompact = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2
   }).format(amount);
 }
 
@@ -60,27 +62,27 @@ export default async function ObligationsPage() {
           ) : (
             obligations.map((ob: any) => (
               <div key={ob.contactId} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
-                <div className="flex items-center gap-4 min-w-0 flex-1">
-                  <div className="w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm bg-red-100 text-red-600">
-                    <ArrowDownRight size={28} strokeWidth={3} />
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm bg-red-100 text-red-600">
+                    <ArrowDownRight size={24} strokeWidth={3} />
                   </div>
                   
                   <div className="min-w-0 flex-1">
-                    <div className="font-black text-zinc-900 text-xl mb-0.5 leading-tight truncate">
+                    <div className="font-black text-zinc-900 text-lg sm:text-xl mb-0.5 leading-tight break-words">
                       {ob.name}
                     </div>
-                    <div className="text-base font-bold text-red-500 flex items-center gap-1.5">
+                    <div className="text-sm sm:text-base font-bold text-red-500 flex items-center gap-1.5 break-words leading-tight">
                       Needs repayment
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-2xl font-black tracking-tighter text-zinc-900">
+                <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                  <div className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-900 shrink-0">
                     {formatPHPCompact(ob.total)}
                   </div>
                   {/* TODO: Add repayment button/link here when we build repayment feature */}
-                  <button className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors">
+                  <button className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors shrink-0">
                     <ArrowRight size={20} strokeWidth={3} />
                   </button>
                 </div>
