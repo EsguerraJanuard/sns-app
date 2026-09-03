@@ -21,14 +21,14 @@ const formatPHPCompact = (amount: number) => {
   return formatPHP(amount);
 }
 
-const getBrandColor = (name: string) => {
+const getWalletBrand = (name: string) => {
   const lower = name.toLowerCase();
-  if (lower.includes('maya')) return 'text-green-600'
-  if (lower.includes('gcash')) return 'text-blue-600'
-  if (lower.includes('maribank')) return 'text-orange-500'
-  if (lower.includes('auto-supply')) return 'text-zinc-700'
-  if (lower.includes('load')) return 'text-purple-600'
-  return 'text-zinc-500'
+  if (lower.includes('maya')) return { color: 'text-green-600', bg: 'bg-green-600', peerBg: 'peer-checked:bg-green-600' };
+  if (lower.includes('gcash')) return { color: 'text-blue-600', bg: 'bg-blue-600', peerBg: 'peer-checked:bg-blue-600' };
+  if (lower.includes('maribank')) return { color: 'text-orange-500', bg: 'bg-orange-500', peerBg: 'peer-checked:bg-orange-500' };
+  if (lower.includes('auto-supply')) return { color: 'text-zinc-700', bg: 'bg-zinc-800', peerBg: 'peer-checked:bg-zinc-800' };
+  if (lower.includes('load')) return { color: 'text-purple-600', bg: 'bg-purple-600', peerBg: 'peer-checked:bg-purple-600' };
+  return { color: 'text-zinc-500', bg: 'bg-[#4A4A4A]', peerBg: 'peer-checked:bg-[#4A4A4A]' };
 }
 
 export default async function TransactionsPage({
@@ -50,13 +50,17 @@ export default async function TransactionsPage({
   })
 
   const wallets = await getWallets()
+  
+  const selectedWallet = wallets.find(w => w.id === wallet)
+  const isFiltered = !!selectedWallet
+  const themeBg = selectedWallet ? getWalletBrand(selectedWallet.name).bg : 'bg-[#4A4A4A]'
 
   return (
     <main className="flex flex-col flex-1 w-full bg-zinc-50 min-h-screen">
       
       <form action="/transactions" method="GET" className="flex flex-col min-h-screen">
-        {/* Header Section (Dark Gray) */}
-        <header className="bg-[#4A4A4A] text-white px-5 pt-8 pb-12 shadow-sm rounded-b-[2rem] relative z-20">
+        {/* Header Section (Dynamic Color) */}
+        <header className={`${themeBg} text-white px-5 pt-8 pb-12 shadow-sm rounded-b-[2rem] relative z-20 transition-colors duration-500`}>
           <div className="flex items-center mb-6">
             <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
               <ChevronLeft size={32} />
@@ -100,11 +104,12 @@ export default async function TransactionsPage({
                     </div>
                   </label>
                   {wallets.map(w => {
-                    const Brand = getBrandColor(w.name)
+                    const brand = getWalletBrand(w.name)
+                    const isChecked = wallet === w.id
                     return (
                       <label key={w.id} className="shrink-0 snap-start cursor-pointer">
-                        <input type="radio" name="wallet" value={w.id} defaultChecked={wallet === w.id} className="peer hidden" />
-                        <div className={`px-5 py-3 rounded-2xl border-2 border-zinc-100 bg-zinc-50 font-bold text-zinc-500 peer-checked:border-zinc-800 peer-checked:bg-zinc-800 peer-checked:text-white transition-all`}>
+                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer hidden" />
+                        <div className={`px-5 py-3 rounded-2xl border-2 font-bold transition-all border-zinc-100 bg-zinc-50 text-zinc-500 peer-checked:border-transparent peer-checked:text-white ${brand.peerBg}`}>
                           {w.name}
                         </div>
                       </label>
@@ -125,7 +130,7 @@ export default async function TransactionsPage({
 
             <button 
               type="submit"
-              className="w-full bg-[#4A4A4A] text-white font-black text-lg uppercase tracking-wider py-4 rounded-2xl shadow-md active:scale-95 transition-all"
+              className={`w-full ${themeBg} text-white font-black text-lg uppercase tracking-wider py-4 rounded-2xl shadow-md active:scale-95 transition-colors duration-500`}
             >
               Apply Search
             </button>
@@ -149,17 +154,21 @@ export default async function TransactionsPage({
             ) : (
               transactions.map((tx: any) => {
                 const isIn = tx.direction === 'IN'
-                const color = getBrandColor(tx.wallet?.name || '')
+                const wBrand = getWalletBrand(tx.wallet?.name || '')
                 
                 const dateStr = new Intl.DateTimeFormat('en-PH', { 
                   month: 'short', day: 'numeric', year: 'numeric' 
                 }).format(new Date(tx.occurred_at))
 
+                // If the user filtered by a specific wallet, amounts are unconditionally black.
+                // Otherwise, they are color-coded by the wallet brand.
+                const amountColor = isFiltered ? 'text-zinc-900' : wBrand.color
+
                 return (
                   <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
-                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
                         {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                       </div>
                       
@@ -169,7 +178,7 @@ export default async function TransactionsPage({
                           {tx.contact?.name || (tx.kind === 'TRANSFER' ? 'Transfer' : 'No name / Bills')}
                         </div>
                         <div className="text-base font-bold text-zinc-400 flex flex-wrap items-center gap-1.5 truncate">
-                          <span className={color}>{tx.wallet?.name || 'Unknown'}</span>
+                          <span className={wBrand.color}>{tx.wallet?.name || 'Unknown'}</span>
                           <span>•</span>
                           <span>{dateStr}</span>
                           {tx.kind === 'BORROWED' && (
@@ -183,7 +192,7 @@ export default async function TransactionsPage({
                     </div>
                     
                     {/* Amount */}
-                    <div className={`text-2xl shrink-0 font-black tracking-tighter ${color}`}>
+                    <div className={`text-2xl shrink-0 font-black tracking-tighter ${amountColor}`}>
                       {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                     </div>
                   </div>
