@@ -174,7 +174,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
   const isFeeApplicable = isBankInvolved || isLoadInvolved
   const activeBrand = selectedWalletName 
     ? getWalletBrand(selectedWalletName) 
-    : { solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30', bg: 'bg-zinc-100', color: 'text-zinc-500' }
+    : { solidBg: 'bg-zinc-900', shadow: 'shadow-zinc-900/30', bg: 'bg-zinc-100', color: 'text-zinc-500' }
 
   if (isSuccess) {
     return (
@@ -291,7 +291,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
           <button
             onClick={executeSubmit}
             disabled={!confirmChecked || isSubmitting}
-            className={`w-full ${confirmChecked ? 'bg-zinc-900' : 'bg-zinc-300'} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl shadow-zinc-900/20`}
+            className={`w-full ${confirmChecked ? activeBrand.solidBg : 'bg-zinc-300'} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl ${confirmChecked ? activeBrand.shadow : 'shadow-none'}`}
           >
             {isSubmitting ? 'Saving...' : 'CONFIRM & SAVE'}
           </button>
@@ -672,7 +672,7 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
       <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
         <button
           type="submit"
-          className="w-full bg-zinc-900 text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl shadow-zinc-900/20"
+          className={`w-full ${activeBrand.solidBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 pointer-events-auto border-4 border-white shadow-xl ${activeBrand.shadow}`}
         >
           REVIEW TRANSACTION
         </button>
