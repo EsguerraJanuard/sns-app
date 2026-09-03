@@ -4,6 +4,7 @@ import { getWallets, Wallet } from "@/actions/wallet"
 import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
 import { getTotalObligations } from "@/actions/obligation"
 import LiveClock from "@/components/LiveClock"
+import { getWalletBrand } from "@/lib/walletUtils"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -27,15 +28,7 @@ const formatPHPCompact = (amount: number) => {
   return formatPHP(amount);
 }
 
-const getWalletBrand = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('maya')) return { icon: WalletIcon, color: 'text-green-600', bg: 'bg-green-100' };
-  if (lower.includes('gcash')) return { icon: WalletIcon, color: 'text-blue-600', bg: 'bg-blue-100' };
-  if (lower.includes('maribank')) return { icon: Landmark, color: 'text-orange-500', bg: 'bg-orange-100' };
-  if (lower.includes('auto-supply')) return { icon: Car, color: 'text-zinc-700', bg: 'bg-zinc-200' };
-  if (lower.includes('load')) return { icon: Smartphone, color: 'text-purple-600', bg: 'bg-purple-100' };
-  return { icon: WalletIcon, color: 'text-zinc-500', bg: 'bg-zinc-100' };
-};
+
 
 export default async function DashboardPage() {
   const wallets = await getWallets()
@@ -49,10 +42,11 @@ export default async function DashboardPage() {
   const gcash = wallets.find(w => w.name.toLowerCase().includes('gcash'))
   const maya = wallets.find(w => w.name.toLowerCase().includes('maya'))
   const maribank = wallets.find(w => w.name.toLowerCase().includes('maribank'))
+  const cash = wallets.find(w => w.slug === 'cash')
   const load = wallets.find(w => w.name.toLowerCase().includes('load'))
   const autosupply = wallets.find(w => w.name.toLowerCase().includes('auto-supply'))
   
-  const orderedWallets = [gcash, maya, maribank, load, autosupply].filter(Boolean) as Wallet[]
+  const orderedWallets = [gcash, maya, maribank, cash, load, autosupply].filter(Boolean) as Wallet[]
 
   return (
     <main className="flex flex-col flex-1 w-full pb-40 bg-zinc-50 min-h-screen relative">
