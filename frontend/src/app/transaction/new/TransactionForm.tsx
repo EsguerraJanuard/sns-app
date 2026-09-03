@@ -313,20 +313,25 @@ export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
         
         <div className="text-center mt-2">
           <label className="text-white/80 text-sm font-bold uppercase tracking-widest block mb-1">Amount</label>
-          <div className="flex items-center justify-center gap-1">
-            <span className={`text-4xl sm:text-5xl font-bold mt-1 ${amount ? 'text-white' : 'text-white/40'}`}>₱</span>
-            <input 
-              ref={amountRef}
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={handleAmountChange}
-              onKeyDown={handleAmountKeyDown}
-              enterKeyHint="next"
-              placeholder="0.00"
-              size={Math.max(4, amount.length || 4)}
-              className="text-5xl sm:text-6xl font-black bg-transparent text-white focus:outline-none placeholder:text-white/40"
-            />
+          <div className="flex items-center justify-center gap-1 w-full px-2">
+            <span className={`text-4xl sm:text-5xl font-bold mt-1 shrink-0 ${amount ? 'text-white' : 'text-white/40'}`}>₱</span>
+            <div className="relative inline-flex items-center justify-center max-w-full overflow-hidden">
+              {/* Hidden span to force container width exactly to text width */}
+              <span className="invisible whitespace-pre text-5xl sm:text-6xl font-black px-2">
+                {amount || '0.00'}
+              </span>
+              <input 
+                ref={amountRef}
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={handleAmountChange}
+                onKeyDown={handleAmountKeyDown}
+                enterKeyHint="next"
+                placeholder="0.00"
+                className="absolute inset-0 w-full h-full text-center text-5xl sm:text-6xl font-black bg-transparent text-white focus:outline-none placeholder:text-white/40"
+              />
+            </div>
           </div>
         </div>
       </header>
