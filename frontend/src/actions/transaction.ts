@@ -236,6 +236,54 @@ export async function getTodaySummary() {
   return { in: totalIn, out: totalOut, profit: totalFeeProfit }
 }
 
+export async function getRecentProfitHistory(daysCount: number = 3) {
+  const now = new Date()
+  const phtOffset = 8 * 60 * 60 * 1000
+  
+  // Array of dates to fetch
+  const dates = []
+  for (let i = 1; i <= daysCount; i++) { // Start from 1 to skip today (which is already shown at the top)
+    const d = new Date(now.getTime() + phtOffset)
+    d.setUTCHours(0, 0, 0, 0)
+    d.setUTCDate(d.getUTCDate() - i)
+    
+    const startUTC = new Date(d.getTime() - phtOffset)
+    const endUTC = new Date(d.getTime() - phtOffset + 24 * 60 * 60 * 1000 - 1)
+    
+    dates.push({
+      label: d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', weekday: 'short' }),
+      start: startUTC.toISOString(),
+      end: endUTC.toISOString(),
+      profit: 0
+    })
+  }
+
+  // Get all active TRANSFER transactions in the date range
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('amount, direction, occurred_at')
+    .eq('status', 'active')
+    .eq('kind', 'TRANSFER')
+    .gte('occurred_at', dates[dates.length - 1].start)
+    .lte('occurred_at', dates[0].end)
+
+  if (!error && data) {
+    data.forEach(tx => {
+      // Find which date bucket it belongs to
+      for (const d of dates) {
+        if (tx.occurred_at >= d.start && tx.occurred_at <= d.end) {
+          if (tx.direction === 'IN') d.profit += Number(tx.amount)
+          if (tx.direction === 'OUT') d.profit -= Number(tx.amount)
+          break
+        }
+      }
+    })
+  }
+
+  // Return only dates that have profit (or return all so user sees zeros? Usually better to return all past 3 days)
+  return dates.map(d => ({ label: d.label, profit: d.profit }))
+}
+
 export async function searchTransactions(params: {
   query?: string,
   dateFrom?: string,

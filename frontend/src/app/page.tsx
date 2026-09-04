@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History, ArrowRight, Star } from "lucide-react"
 import { getWallets, Wallet } from "@/actions/wallet"
-import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
+import { getTodaySummary, getRecentTransactions, getRecentProfitHistory } from "@/actions/transaction"
 import { getTotalDebts } from "@/actions/obligation"
 import { getTopContacts } from "@/actions/contact"
 import LiveClock from "@/components/LiveClock"
@@ -34,6 +34,7 @@ export default async function DashboardPage() {
   const todaySummary = await getTodaySummary()
   const recentTxs = await getRecentTransactions(5)
   const topContacts = await getTopContacts(3)
+  const profitHistory = await getRecentProfitHistory(3)
   
   const totalOwed = await getTotalDebts('BORROWED')
   const totalCollect = await getTotalDebts('LENT')
@@ -279,6 +280,27 @@ export default async function DashboardPage() {
                   <Plus size={24} className="text-zinc-400" strokeWidth={3} />
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Profit History */}
+      {profitHistory.length > 0 && profitHistory.some(p => p.profit !== 0) && (
+        <section className="px-5 space-y-3 pt-4 mb-32 relative z-10">
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+            <h3 className="text-base font-bold text-zinc-500 uppercase tracking-widest">Tubo History</h3>
+          </div>
+          
+          <div className="bg-white rounded-3xl shadow-sm border border-zinc-100 overflow-hidden divide-y divide-zinc-50">
+            {profitHistory.map((day, idx) => (
+              <div key={idx} className="p-5 flex items-center justify-between">
+                <div className="font-bold text-zinc-600 uppercase tracking-widest text-sm">{day.label}</div>
+                <div className={`font-black text-xl tracking-tighter ${day.profit > 0 ? 'text-amber-600' : 'text-zinc-400'}`}>
+                  {day.profit > 0 ? '+' : ''}{formatPHPCompact(day.profit)}
+                </div>
+              </div>
             ))}
           </div>
         </section>
