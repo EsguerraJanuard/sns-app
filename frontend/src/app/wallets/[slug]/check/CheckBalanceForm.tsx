@@ -6,15 +6,7 @@ import Link from 'next/link'
 import { ChevronLeft, CheckCircle2, Car, Smartphone, Landmark, Wallet as WalletIcon } from 'lucide-react'
 import { saveReconciliation } from '@/actions/reconcile'
 
-const getWalletBrand = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('maya')) return { icon: WalletIcon, color: 'text-green-100', headerBg: 'bg-green-600', buttonColor: 'text-green-600', buttonBg: 'bg-green-100' };
-  if (lower.includes('gcash')) return { icon: WalletIcon, color: 'text-blue-100', headerBg: 'bg-blue-600', buttonColor: 'text-blue-600', buttonBg: 'bg-blue-100' };
-  if (lower.includes('maribank')) return { icon: Landmark, color: 'text-orange-100', headerBg: 'bg-orange-500', buttonColor: 'text-orange-500', buttonBg: 'bg-orange-100' };
-  if (lower.includes('auto-supply')) return { icon: Car, color: 'text-zinc-100', headerBg: 'bg-zinc-800', buttonColor: 'text-zinc-700', buttonBg: 'bg-zinc-200' };
-  if (lower.includes('load')) return { icon: Smartphone, color: 'text-purple-100', headerBg: 'bg-purple-600', buttonColor: 'text-purple-600', buttonBg: 'bg-purple-100' };
-  return { icon: WalletIcon, color: 'text-zinc-100', headerBg: 'bg-blue-600', buttonColor: 'text-blue-600', buttonBg: 'bg-blue-100' };
-};
+import { getWalletBrand } from '@/lib/walletUtils'
 
 export default function CheckBalanceForm({ walletId, walletName, expected, slug }: { walletId: string, walletName: string, expected: number, slug: string }) {
   const router = useRouter()
@@ -71,12 +63,12 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
       <div className="p-6 pt-24 space-y-8 flex flex-col items-center justify-center text-center bg-zinc-50 min-h-screen pb-32">
         {isExact ? (
           <div className="flex flex-col items-center space-y-6">
-            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center shadow-inner mb-4 relative">
-              <div className="absolute inset-0 bg-green-400 opacity-20 rounded-full animate-ping"></div>
-              <CheckCircle2 size={72} className="text-green-600 relative z-10" strokeWidth={3} />
+            <div className={`w-32 h-32 ${Brand.bg} rounded-full flex items-center justify-center shadow-inner mb-4 relative`}>
+              <div className={`absolute inset-0 ${Brand.headerBg} rounded-full animate-ping opacity-20`}></div>
+              <CheckCircle2 size={64} className={`${Brand.color} relative z-10`} strokeWidth={2.5} />
             </div>
             <h2 className="text-5xl font-black text-zinc-900 tracking-tight">Sakto!</h2>
-            <p className="text-xl text-zinc-500 font-medium max-w-[280px]">
+            <p className="text-lg text-zinc-500 font-medium max-w-[280px]">
               Ang record mo at ang tunay na {walletName} {slug === 'cash' ? '' : 'app '}ay parehong-pareho.
             </p>
           </div>
@@ -98,7 +90,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
         <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
           <Link 
             href={`/wallets/${slug}`} 
-            className={`flex items-center justify-center w-full ${isExact ? 'bg-green-600' : Brand.headerBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-all pointer-events-auto border-4 border-white shadow-xl shadow-black/10`}
+            className={`flex items-center justify-center w-full ${Brand.headerBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-all pointer-events-auto border-4 border-white shadow-xl shadow-black/10`}
           >
             Done
           </Link>
@@ -120,7 +112,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
         </div>
         
         <div className="text-center mt-2">
-          <label className={`${Brand.color} text-sm font-bold uppercase tracking-widest block mb-1`}>Expected na laman</label>
+          <label className="text-white/80 text-sm font-bold uppercase tracking-widest block mb-1">Expected na laman</label>
           <div className="text-5xl font-black">{formatPHP(expected)}</div>
         </div>
       </header>
