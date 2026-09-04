@@ -99,8 +99,19 @@ export default function TransactionForm({
     if (parts[1] && parts[1].length > 2) raw = `${parts[0]}.${parts[1].slice(0, 2)}`
     
     if (raw) {
+      const p = raw.split('.')
+      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      setAmount(p.join('.'))
+    } else {
+      setAmount('')
+    }
+  }
+
+  // Auto-compute fee when amount or wallets change
+  useEffect(() => {
+    const raw = amount.replace(/,/g, '')
+    if (raw) {
       const numAmount = Number(raw)
-      
       const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
       const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
       const isBankInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank'))
@@ -114,15 +125,10 @@ export default function TransactionForm({
       } else {
         setExchangeFee('0')
       }
-
-      const p = raw.split('.')
-      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-      setAmount(p.join('.'))
     } else {
-      setAmount('')
       setExchangeFee('')
     }
-  }
+  }, [amount, walletId, exchangeWalletId, wallets])
 
   const handleNextClick = (e: React.FormEvent) => {
     e.preventDefault()
