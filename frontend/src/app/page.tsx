@@ -224,7 +224,19 @@ export default async function DashboardPage() {
                           {tx.kind === 'BORROWED' && (
                             <>
                               <span>•</span>
-                              <span className="text-red-500">Borrowed</span>
+                              <span className="text-red-500">Utang Ko</span>
+                            </>
+                          )}
+                          {tx.kind === 'LENT' && (
+                            <>
+                              <span>•</span>
+                              <span className="text-red-500">Pautang</span>
+                            </>
+                          )}
+                          {tx.kind === 'REPAYMENT' && (
+                            <>
+                              <span>•</span>
+                              <span className="text-green-600">Settlement</span>
                             </>
                           )}
                         </div>

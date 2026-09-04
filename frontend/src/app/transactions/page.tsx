@@ -107,6 +107,24 @@ export default async function TransactionsPage({
                           <span>
                             {new Date(tx.occurred_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
+                          {tx.kind === 'BORROWED' && (
+                            <>
+                              <span>•</span>
+                              <span className="text-red-500">Utang Ko</span>
+                            </>
+                          )}
+                          {tx.kind === 'LENT' && (
+                            <>
+                              <span>•</span>
+                              <span className="text-red-500">Pautang</span>
+                            </>
+                          )}
+                          {tx.kind === 'REPAYMENT' && (
+                            <>
+                              <span>•</span>
+                              <span className="text-green-600">Settlement</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
