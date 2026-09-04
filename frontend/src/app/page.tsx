@@ -190,7 +190,7 @@ export default async function DashboardPage() {
                   <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
-                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-zinc-200 text-zinc-700' : 'bg-zinc-100 text-zinc-600'}`}>
+                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${wBrand.bg} ${wBrand.color}`}>
                         {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                       </div>
                       

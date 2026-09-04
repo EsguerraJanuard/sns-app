@@ -89,33 +89,39 @@ export default async function TransactionsPage({
               <div>
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block mb-2">Wallet</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <label className={`
-                    col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
-                    ${!wallet ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
-                  `}>
-                    <input type="radio" name="wallet" value="" defaultChecked={!wallet} className="peer sr-only" />
-                    <div className="flex flex-col items-center gap-1 w-full">
-                      <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
-                        ALL WALLETS
-                      </span>
-                    </div>
-                  </label>
+                  <div className="relative col-span-2">
+                    <input type="radio" id="wallet-all" name="wallet" value="" defaultChecked={!wallet} className="peer sr-only" />
+                    <label htmlFor="wallet-all" className={`
+                      flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border-2
+                      ${!wallet ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50'}
+                      peer-checked:border-zinc-900 peer-checked:text-zinc-900
+                    `}>
+                      <div className="flex flex-col items-center gap-1 w-full">
+                        <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
+                          ALL WALLETS
+                        </span>
+                      </div>
+                    </label>
+                  </div>
                   {wallets.map(w => {
                     const Brand = getWalletBrand(w.name)
                     const isChecked = wallet === w.id
                     return (
-                      <label key={w.id} className={`
-                        relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
-                        ${isChecked ? `bg-white border-${Brand.color.replace('text-', '')} shadow-sm shadow-${Brand.color.replace('text-', '')}/20` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
-                      `}>
-                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" />
-                        <div className="flex flex-col items-center gap-2 w-full">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isChecked ? Brand.headerBg : Brand.bg} ${isChecked ? 'text-white' : Brand.color} transition-colors`}>
-                            <Brand.icon size={20} strokeWidth={2.5} />
+                      <div key={w.id} className="relative">
+                        <input type="radio" id={`wallet-${w.id}`} name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" />
+                        <label htmlFor={`wallet-${w.id}`} className={`
+                          flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border-2
+                          ${isChecked ? `bg-white ${Brand.border} shadow-sm ${Brand.shadow}` : 'bg-white border-zinc-100 hover:bg-zinc-50'}
+                          peer-checked:border-zinc-900 peer-checked:shadow-md
+                        `}>
+                          <div className="flex flex-col items-center gap-2 w-full">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isChecked ? Brand.headerBg + ' text-white' : Brand.bg + ' ' + Brand.color}`}>
+                              <Brand.icon size={20} strokeWidth={2.5} />
+                            </div>
+                            <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full font-bold ${isChecked ? Brand.color : 'text-zinc-400'}`}>{w.name}</span>
                           </div>
-                          <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isChecked ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
-                        </div>
-                      </label>
+                        </label>
+                      </div>
                     )
                   })}
                 </div>
@@ -170,7 +176,7 @@ export default async function TransactionsPage({
                   <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
-                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${wBrand.bg} ${wBrand.color}`}>
                         {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                       </div>
                       
