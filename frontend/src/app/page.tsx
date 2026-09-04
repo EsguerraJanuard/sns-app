@@ -67,20 +67,20 @@ export default async function DashboardPage() {
       <div className="px-5 py-6 space-y-8 flex-1 -mt-10 relative z-10">
         
         {/* Today's Summary */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-100">
+        <section className="bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 flex gap-6 divide-x divide-zinc-200">
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY IN
             </div>
-            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter truncate pr-2">{formatPHPCompact(todaySummary.in)}</div>
           </div>
-          <div className="flex-1 pl-4 min-w-0">
+          <div className="flex-1 pl-6 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY OUT
             </div>
-            <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter truncate">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
         
