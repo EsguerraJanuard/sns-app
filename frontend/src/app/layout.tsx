@@ -15,7 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SNS",
   description: "Personal Financial Memory Assistant",
-  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SNS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
