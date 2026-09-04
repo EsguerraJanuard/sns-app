@@ -3,6 +3,7 @@ import { ChevronLeft, ArrowDownRight, ArrowUpRight, Calendar, Landmark, User, Fi
 import { getTransaction } from "@/actions/transaction"
 import { getWalletBrand } from "@/lib/walletUtils"
 import { notFound } from "next/navigation"
+import VoidButton from "./VoidButton"
 
 export const dynamic = 'force-dynamic'
 
@@ -35,23 +36,30 @@ export default async function TransactionDetailsPage({
     hour12: true
   })
 
+  const isVoided = tx.status === 'voided'
+
   return (
     <main className="flex flex-col min-h-screen bg-zinc-50 relative pb-24">
       {/* Header */}
-      <header className={`${isIn ? 'bg-green-500' : 'bg-blue-500'} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
+      <header className={`${isVoided ? 'bg-zinc-800' : (isIn ? 'bg-green-500' : 'bg-blue-500')} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
             <ChevronLeft size={32} />
           </Link>
           <div className="text-white/80 font-bold tracking-widest uppercase text-sm">
-            {isIn ? 'Money Received' : 'Money Sent'}
+            {isVoided ? 'VOIDED RECORD' : (isIn ? 'Money Received' : 'Money Sent')}
           </div>
           <div className="w-8" /> {/* Spacer */}
         </div>
 
         <div className="text-center px-2">
+          {isVoided && (
+            <div className="inline-block bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full tracking-widest uppercase mb-4">
+              Deleted / Voided
+            </div>
+          )}
           <h2 className="text-white/80 text-sm font-bold uppercase tracking-widest mb-1">Amount</h2>
-          <div className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-sm truncate">
+          <div className={`text-5xl sm:text-6xl font-black tracking-tight drop-shadow-sm truncate ${isVoided ? 'text-zinc-500 line-through' : 'text-white'}`}>
             {isIn ? '+' : '-'}₱{tx.amount.toLocaleString()}
           </div>
         </div>
@@ -128,12 +136,16 @@ export default async function TransactionDetailsPage({
         </div>
       </div>
 
-      {/* Edit Button (Placeholder) */}
-      <div className="px-5 mt-6">
-        <button className="w-full bg-zinc-900 text-white rounded-2xl py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-transform flex items-center justify-center gap-3">
-          <Edit3 size={24} strokeWidth={2.5} />
-          Edit Transaction
-        </button>
+      <div className="px-5 mt-6 space-y-3">
+        {/* We removed the Edit button based on the user's preference to simplify and just void/recreate */}
+        
+        {!isVoided && (
+          <VoidButton 
+            transactionId={tx.id} 
+            isTransfer={tx.kind === 'TRANSFER'} 
+            isRepayment={tx.kind === 'REPAYMENT'} 
+          />
+        )}
       </div>
 
     </main>

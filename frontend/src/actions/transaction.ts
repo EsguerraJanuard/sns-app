@@ -246,3 +246,65 @@ export async function searchTransactions(params: {
 
   return results
 }
+
+export async function voidTransaction(id: string) {
+  const { data: tx, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error || !tx) {
+    throw new Error('Transaction not found')
+  }
+
+  // 1. If it is a TRANSFER, void all transactions in the same transfer_group_id
+  if ((tx.kind === 'TRANSFER' || tx.exchange_wallet_id) && tx.transfer_group_id) {
+    await supabase
+      .from('transactions')
+      .update({ status: 'voided' })
+      .eq('transfer_group_id', tx.transfer_group_id)
+  } 
+  else {
+    // 2. Void the single transaction
+    await supabase
+      .from('transactions')
+      .update({ status: 'voided' })
+      .eq('id', id)
+
+    // 3. Cascading void for BORROWED / LENT
+    if (tx.kind === 'BORROWED' || tx.kind === 'LENT') {
+      await supabase
+        .from('obligations')
+        .update({ status: 'voided' })
+        .eq('origin_transaction_id', id)
+    }
+
+    // 4. Cascading fix for REPAYMENTS
+    if (tx.kind === 'REPAYMENT') {
+      const { data: reps } = await supabase
+        .from('obligation_repayments')
+        .select('obligation_id')
+        .eq('transaction_id', id)
+      
+      if (reps && reps.length > 0) {
+        const obIds = reps.map(r => r.obligation_id)
+        
+        // Delete the repayment records
+        await supabase
+          .from('obligation_repayments')
+          .delete()
+          .eq('transaction_id', id)
+          
+        // Re-open those obligations since they now have a balance again
+        await supabase
+          .from('obligations')
+          .update({ status: 'open', settled_at: null })
+          .in('id', obIds)
+      }
+    }
+  }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
