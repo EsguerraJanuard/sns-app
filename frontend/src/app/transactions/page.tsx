@@ -93,7 +93,7 @@ export default async function TransactionsPage({
                     col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
                     ${!wallet ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
                   `}>
-                    <input type="radio" name="wallet" value="" defaultChecked={!wallet} className="peer sr-only" onChange={(e) => e.target.form?.requestSubmit()} />
+                    <input type="radio" name="wallet" value="" defaultChecked={!wallet} className="peer sr-only" />
                     <div className="flex flex-col items-center gap-1 w-full">
                       <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
                         ALL WALLETS
@@ -108,7 +108,7 @@ export default async function TransactionsPage({
                         relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
                         ${isChecked ? `bg-white border-${Brand.color.replace('text-', '')} shadow-sm shadow-${Brand.color.replace('text-', '')}/20` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
                       `}>
-                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" onChange={(e) => e.target.form?.requestSubmit()} />
+                        <input type="radio" name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" />
                         <div className="flex flex-col items-center gap-2 w-full">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isChecked ? Brand.headerBg : Brand.bg} ${isChecked ? 'text-white' : Brand.color} transition-colors`}>
                             <Brand.icon size={20} strokeWidth={2.5} />
