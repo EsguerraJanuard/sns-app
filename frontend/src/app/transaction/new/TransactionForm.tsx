@@ -570,11 +570,24 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
           {exchangeWalletId && (
             <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
               
+              {isFeeApplicable && (
+                <div className="flex items-center gap-4">
+                  <span className="text-base font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
+                  <input 
+                    type="number"
+                    value={exchangeFee}
+                    onChange={(e) => setExchangeFee(e.target.value)}
+                    className="w-full bg-white rounded-2xl border-2 border-zinc-200 px-5 py-4 text-3xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
+                    placeholder="0"
+                  />
+                </div>
+              )}
+
               {/* Quick Fee Buttons */}
               {isFeeApplicable && (
                 <div>
-                  <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">Quick Fee (Discount)</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 text-center">Quick Fee (Discount)</div>
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {(isLoadInvolved ? [0, 5, 10, 15, 20] : [0, 5, 10, 15, 20, 25, 30]).map(val => (
                       <button
                         key={val}
@@ -588,41 +601,28 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                   </div>
                 </div>
               )}
-
-              {isFeeApplicable && (
-                <div className="flex items-center gap-4">
-                  <span className="text-base font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
-                  <input 
-                    type="number"
-                    value={exchangeFee}
-                    onChange={(e) => setExchangeFee(e.target.value)}
-                    className="w-full bg-white rounded-2xl border-2 border-zinc-200 px-5 py-4 text-3xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
-                    placeholder="0"
-                  />
-                </div>
-              )}
                 
-                <div className="text-sm font-bold text-zinc-500 space-y-2 bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm mt-4">
+                <div className="text-lg sm:text-xl font-bold text-zinc-500 space-y-4 bg-white p-6 rounded-3xl border-2 border-zinc-100 shadow-sm mt-4">
                   {direction === 'OUT' ? (
                     <>
                       <div className="flex justify-between items-center text-red-500">
                         <span>From {selectedWalletName || 'Wallet'}</span>
-                        <span className="text-lg font-black">- ₱{amount || 0}</span>
+                        <span className="text-2xl sm:text-3xl font-black">- ₱{amount || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-green-600 font-black">
                         <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
-                        <span className="text-xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        <span className="text-3xl sm:text-4xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between items-center text-green-600 font-black">
                         <span>To {selectedWalletName || 'Wallet'}</span>
-                        <span className="text-xl">+ ₱{amount || 0}</span>
+                        <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-red-500">
                         <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
-                        <span className="text-lg font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                        <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
                       </div>
                     </>
                   )}
