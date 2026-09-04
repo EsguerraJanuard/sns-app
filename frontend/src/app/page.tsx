@@ -257,10 +257,8 @@ export default async function DashboardPage() {
                     <span className="text-2xl font-black text-yellow-600">#{index + 1}</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xl font-black text-zinc-900 truncate">{contact.name}</div>
-                    <div className="text-sm font-bold text-zinc-400">
-                      {contact.count} transactions
-                    </div>
+                    <div className="font-extrabold text-lg text-zinc-900 truncate leading-tight mb-1">{contact.name}</div>
+                    <div className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{contact.count} {contact.count === 1 ? 'transaction' : 'transactions'}</div>
                   </div>
                 </div>
                 <div className="w-10 h-10 bg-zinc-50 rounded-full flex items-center justify-center group-hover:bg-zinc-100 shrink-0">
