@@ -216,7 +216,7 @@ export async function getTodaySummary() {
     .gte('occurred_at', startOfTodayUTC.toISOString())
 
   if (error || !data) {
-    return { in: 0, out: 0 }
+    return { in: 0, out: 0, profit: 0 }
   }
 
   let totalIn = 0
@@ -229,6 +229,9 @@ export async function getTodaySummary() {
       if (tx.direction === 'OUT') totalFeeProfit -= Number(tx.amount)
       return; // Do not inflate Money IN/OUT totals with internal transfers
     }
+    // Also skip LENT, BORROWED, and REPAYMENT to avoid inflating daily revenue metrics
+    if (tx.kind === 'LENT' || tx.kind === 'BORROWED' || tx.kind === 'REPAYMENT') return;
+
     if (tx.direction === 'IN') totalIn += Number(tx.amount)
     if (tx.direction === 'OUT') totalOut += Number(tx.amount)
   })
@@ -241,7 +244,7 @@ export async function getRecentProfitHistory(daysCount: number = 3) {
   const phtOffset = 8 * 60 * 60 * 1000
   
   // Array of dates to fetch
-  const dates = []
+  const dates: { label: string; start: string; end: string; profit: number }[] = []
   for (let i = 1; i <= daysCount; i++) { // Start from 1 to skip today (which is already shown at the top)
     const d = new Date(now.getTime() + phtOffset)
     d.setUTCHours(0, 0, 0, 0)
