@@ -45,12 +45,9 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="flex-1 flex flex-col bg-zinc-50 min-h-screen pb-24">
-      {/* Header (Client Component for Toggle) */}
       <WalletHeader 
         walletName={wallet.name}
         expectedBalance={wallet.expected_balance}
-        Brand={Brand}
-        Icon={Icon}
       />
 
       {/* QR Code Section (Only for known wallets) */}
