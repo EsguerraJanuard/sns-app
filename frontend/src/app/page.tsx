@@ -73,14 +73,14 @@ export default async function DashboardPage() {
               <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY IN
             </div>
-            <div className="text-[1.7rem] sm:text-3xl font-black text-zinc-900 tracking-tighter break-words leading-none pt-1">{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.in)}</div>
           </div>
           <div className="flex-1 min-w-0 pl-4">
             <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY OUT
             </div>
-            <div className="text-[1.7rem] sm:text-3xl font-black text-zinc-900 tracking-tighter break-words leading-none pt-1">{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
         
