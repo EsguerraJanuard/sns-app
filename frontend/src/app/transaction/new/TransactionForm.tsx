@@ -18,12 +18,20 @@ const getWalletBrand = (name: string) => {
   return { icon: WalletIcon, color: 'text-zinc-500', border: 'border-zinc-200', bg: 'bg-zinc-100', solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30' };
 };
 
-export default function TransactionForm({ wallets, initialDirection = null }: { wallets: Wallet[], initialDirection?: 'IN' | 'OUT' | null }) {
+export default function TransactionForm({ 
+  wallets, 
+  initialDirection = null,
+  initialContact = ''
+}: { 
+  wallets: Wallet[], 
+  initialDirection?: 'IN' | 'OUT' | null,
+  initialContact?: string
+}) {
   const router = useRouter()
   const [step, setStep] = useState<1 | 2>(1)
   
   const [direction, setDirection] = useState<'IN' | 'OUT' | null>(initialDirection)
-  const [contactName, setContactName] = useState('')
+  const [contactName, setContactName] = useState(initialContact)
   const [contactSuggestions, setContactSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [amount, setAmount] = useState('')

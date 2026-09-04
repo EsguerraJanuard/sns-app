@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History, ArrowRight } from "lucide-react"
+import { ArrowDownRight, ArrowUpRight, Plus, Car, Smartphone, Landmark, Wallet as WalletIcon, History, ArrowRight, Star } from "lucide-react"
 import { getWallets, Wallet } from "@/actions/wallet"
 import { getTodaySummary, getRecentTransactions } from "@/actions/transaction"
 import { getTotalDebts } from "@/actions/obligation"
+import { getTopContacts } from "@/actions/contact"
 import LiveClock from "@/components/LiveClock"
 import { getWalletBrand } from "@/lib/walletUtils"
 
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
   const wallets = await getWallets()
   const todaySummary = await getTodaySummary()
   const recentTxs = await getRecentTransactions(5)
+  const topContacts = await getTopContacts(3)
   
   const totalOwed = await getTotalDebts('BORROWED')
   const totalCollect = await getTotalDebts('LENT')
@@ -234,6 +236,41 @@ export default async function DashboardPage() {
         </section>
 
       </div>
+
+      {/* Suki / Top Contacts */}
+      {topContacts.length > 0 && (
+        <section className="px-5 space-y-3 pt-4 mb-4 relative z-10">
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <Star size={22} className="text-yellow-500 fill-yellow-500" />
+            <h3 className="text-base font-bold text-zinc-500 uppercase tracking-widest">Mga Suki</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            {topContacts.map((contact, index) => (
+              <Link
+                key={contact.id}
+                href={`/transaction/new?contact=${encodeURIComponent(contact.name)}`}
+                className="bg-white border-2 border-yellow-100 rounded-3xl p-5 shadow-sm flex items-center justify-between active:scale-[0.98] transition-transform hover:border-yellow-200 group"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center shrink-0">
+                    <span className="text-2xl font-black text-yellow-600">#{index + 1}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xl font-black text-zinc-900 truncate">{contact.name}</div>
+                    <div className="text-sm font-bold text-zinc-400">
+                      {contact.count} transactions
+                    </div>
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-zinc-50 rounded-full flex items-center justify-center group-hover:bg-zinc-100 shrink-0">
+                  <Plus size={24} className="text-zinc-400" strokeWidth={3} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Add Transaction Button */}
       <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
