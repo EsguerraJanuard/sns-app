@@ -115,7 +115,9 @@ export default async function TransactionDetailsPage({
             <div className="min-w-0">
               <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Transaction Type</p>
               <p className="text-lg font-bold text-zinc-900">
-                {tx.kind}
+                {tx.kind === 'CASH_IN' ? 'Money In' : 
+                 tx.kind === 'CASH_OUT' ? 'Money Out' : 
+                 tx.kind?.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
               </p>
             </div>
           </div>
