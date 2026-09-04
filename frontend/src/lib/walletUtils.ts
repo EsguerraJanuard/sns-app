@@ -7,6 +7,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: WalletIcon, 
       color: 'text-blue-600', 
+      headerColor: 'text-blue-100',
       bg: 'bg-blue-100', 
       headerBg: 'bg-blue-600', 
       buttonColor: 'text-blue-600', 
@@ -18,6 +19,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: WalletIcon, 
       color: 'text-green-600', 
+      headerColor: 'text-green-100',
       bg: 'bg-green-100', 
       headerBg: 'bg-green-600', 
       buttonColor: 'text-green-600', 
@@ -29,6 +31,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: Landmark, 
       color: 'text-orange-500', 
+      headerColor: 'text-orange-100',
       bg: 'bg-orange-100', 
       headerBg: 'bg-orange-500', 
       buttonColor: 'text-orange-500', 
@@ -40,6 +43,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: Banknote, 
       color: 'text-amber-600', 
+      headerColor: 'text-amber-100',
       bg: 'bg-amber-100', 
       headerBg: 'bg-amber-500', 
       buttonColor: 'text-amber-600', 
@@ -51,6 +55,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: Package, 
       color: 'text-zinc-600', 
+      headerColor: 'text-zinc-100',
       bg: 'bg-zinc-200', 
       headerBg: 'bg-zinc-700', 
       buttonColor: 'text-zinc-700', 
@@ -62,6 +67,7 @@ export const getWalletBrand = (name: string) => {
     return { 
       icon: Smartphone, 
       color: 'text-purple-600', 
+      headerColor: 'text-purple-100',
       bg: 'bg-purple-100', 
       headerBg: 'bg-purple-600', 
       buttonColor: 'text-purple-600', 
@@ -74,6 +80,7 @@ export const getWalletBrand = (name: string) => {
   return { 
     icon: WalletIcon, 
     color: 'text-zinc-500', 
+    headerColor: 'text-zinc-100',
     bg: 'bg-zinc-100', 
     headerBg: 'bg-zinc-700', 
     buttonColor: 'text-zinc-700', 

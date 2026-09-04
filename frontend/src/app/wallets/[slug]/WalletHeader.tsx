@@ -17,15 +17,7 @@ const formatPHPCompact = (amount: number) => {
   return formatPHP(amount)
 }
 
-const getWalletBrand = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('maya')) return { icon: WalletIcon, color: 'text-green-100', headerBg: 'bg-green-600', buttonColor: 'text-green-600', buttonBg: 'bg-green-100' };
-  if (lower.includes('gcash')) return { icon: WalletIcon, color: 'text-blue-100', headerBg: 'bg-blue-600', buttonColor: 'text-blue-600', buttonBg: 'bg-blue-100' };
-  if (lower.includes('maribank')) return { icon: Landmark, color: 'text-orange-100', headerBg: 'bg-orange-500', buttonColor: 'text-orange-500', buttonBg: 'bg-orange-100' };
-  if (lower.includes('auto-supply')) return { icon: Car, color: 'text-zinc-100', headerBg: 'bg-zinc-800', buttonColor: 'text-zinc-700', buttonBg: 'bg-zinc-200' };
-  if (lower.includes('load')) return { icon: Smartphone, color: 'text-purple-100', headerBg: 'bg-purple-600', buttonColor: 'text-purple-600', buttonBg: 'bg-purple-100' };
-  return { icon: WalletIcon, color: 'text-zinc-100', headerBg: 'bg-blue-600', buttonColor: 'text-blue-600', buttonBg: 'bg-blue-100' };
-};
+import { getWalletBrand } from '@/lib/walletUtils'
 
 export default function WalletHeader({ 
   walletName, 
@@ -45,13 +37,13 @@ export default function WalletHeader({
           <ChevronLeft size={28} />
         </Link>
         <div className="ml-2 flex items-center gap-2">
-          <Icon size={24} className={Brand.color} />
+          <Icon size={24} className={Brand.headerColor} />
           <h1 className="text-2xl font-black uppercase tracking-wide">{walletName}</h1>
         </div>
       </div>
       
       <div>
-        <h2 className={`${Brand.color} text-lg font-medium mb-2`}>Expected balance</h2>
+        <h2 className={`${Brand.headerColor} text-lg font-medium mb-2`}>Expected balance</h2>
         <div 
           onClick={() => setShowBalance(!showBalance)}
           className="flex items-center gap-4 cursor-pointer active:scale-95 transition-transform"
@@ -59,7 +51,7 @@ export default function WalletHeader({
           <div className="text-4xl sm:text-5xl font-extrabold tracking-tight">
             {showBalance ? formatPHPCompact(expectedBalance) : '••••••••'}
           </div>
-          <button className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors ${Brand.color}`}>
+          <button className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors ${Brand.headerColor}`}>
             {showBalance ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
