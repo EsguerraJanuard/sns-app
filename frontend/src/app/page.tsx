@@ -68,14 +68,14 @@ export default async function DashboardPage() {
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-100">
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowDownRight size={16} className="text-green-500" strokeWidth={3} />
+              <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY IN
             </div>
             <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.in)}</div>
           </div>
           <div className="flex-1 pl-4 min-w-0">
             <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowUpRight size={16} className="text-blue-500" strokeWidth={3} />
+              <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY OUT
             </div>
             <div className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter whitespace-nowrap">{formatPHPCompact(todaySummary.out)}</div>
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
                   <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                       {/* Icon */}
-                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-zinc-200 text-zinc-700' : 'bg-zinc-100 text-zinc-600'}`}>
                         {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                       </div>
                       
@@ -235,21 +235,14 @@ export default async function DashboardPage() {
 
       </div>
 
-      {/* Action Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto flex gap-3">
+      {/* Add Transaction Button */}
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
         <Link 
-          href="/transaction/new?dir=IN"
-          className="bg-green-600 text-white flex-1 py-5 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl shadow-green-600/20 active:scale-95 transition-transform pointer-events-auto border-4 border-white"
+          href="/transaction/new"
+          className="bg-zinc-900 text-white w-full py-5 rounded-[1.5rem] flex items-center justify-center gap-3 shadow-xl shadow-zinc-900/20 active:scale-95 transition-transform pointer-events-auto border-4 border-white"
         >
-          <ArrowDownRight size={24} strokeWidth={3} />
-          <span className="text-xl font-black tracking-wide">IN</span>
-        </Link>
-        <Link 
-          href="/transaction/new?dir=OUT"
-          className="bg-blue-600 text-white flex-1 py-5 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-95 transition-transform pointer-events-auto border-4 border-white"
-        >
-          <ArrowUpRight size={24} strokeWidth={3} />
-          <span className="text-xl font-black tracking-wide">OUT</span>
+          <Plus size={28} strokeWidth={3} />
+          <span className="text-2xl font-black tracking-wide">ADD TRANSACTION</span>
         </Link>
       </div>
 

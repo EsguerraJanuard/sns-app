@@ -165,15 +165,21 @@ export async function getRecentTransactions(limit = 5, walletId?: string) {
 }
 
 export async function getTodaySummary() {
-  // Get start of today (local time approach, simplified)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // Use Philippine Time (UTC+8) for "Today" boundaries
+  const now = new Date()
+  const phtOffset = 8 * 60 * 60 * 1000
+  // Current time in PHT
+  const phtTime = new Date(now.getTime() + phtOffset)
+  // Set to midnight PHT
+  phtTime.setUTCHours(0, 0, 0, 0)
+  // Convert back to UTC for the database query
+  const startOfTodayUTC = new Date(phtTime.getTime() - phtOffset)
   
   const { data, error } = await supabase
     .from('transactions')
-    .select('amount, direction')
+    .select('amount, direction, kind')
     .eq('status', 'active')
-    .gte('occurred_at', today.toISOString())
+    .gte('occurred_at', startOfTodayUTC.toISOString())
 
   if (error || !data) {
     return { in: 0, out: 0 }
@@ -183,6 +189,7 @@ export async function getTodaySummary() {
   let totalOut = 0
 
   data.forEach(tx => {
+    if (tx.kind === 'TRANSFER') return; // Do not inflate totals with internal wallet transfers
     if (tx.direction === 'IN') totalIn += Number(tx.amount)
     if (tx.direction === 'OUT') totalOut += Number(tx.amount)
   })
