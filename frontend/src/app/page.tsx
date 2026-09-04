@@ -67,22 +67,36 @@ export default async function DashboardPage() {
       <div className="px-5 py-6 space-y-8 flex-1 -mt-10 relative z-10">
         
         {/* Today's Summary */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex divide-x divide-zinc-200">
-          <div className="flex-1 min-w-0 pr-4">
-            <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
-              MONEY IN
+        <div className="space-y-3">
+          <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex divide-x divide-zinc-200">
+            <div className="flex-1 min-w-0 pr-4">
+              <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
+                MONEY IN
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.in)}</div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.in)}</div>
-          </div>
-          <div className="flex-1 min-w-0 pl-4">
-            <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
-              MONEY OUT
+            <div className="flex-1 min-w-0 pl-4">
+              <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
+                MONEY OUT
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.out)}</div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tighter whitespace-nowrap pt-1">{formatPHPCompact(todaySummary.out)}</div>
-          </div>
-        </section>
+          </section>
+
+          {todaySummary.profit !== 0 && (
+            <section className="bg-amber-100/60 rounded-3xl p-4 px-6 shadow-sm border border-amber-200/50 flex items-center justify-between">
+              <div className="text-amber-700 font-black uppercase tracking-widest text-xs flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                Kinita sa Fees
+              </div>
+              <div className="text-amber-600 font-black text-xl tracking-tighter">
+                {todaySummary.profit > 0 ? '+' : ''}{formatPHPCompact(todaySummary.profit)}
+              </div>
+            </section>
+          )}
+        </div>
         
         {/* Wallets */}
         <section className="space-y-3 mt-8">

@@ -221,14 +221,19 @@ export async function getTodaySummary() {
 
   let totalIn = 0
   let totalOut = 0
+  let totalFeeProfit = 0
 
   data.forEach(tx => {
-    if (tx.kind === 'TRANSFER') return; // Do not inflate totals with internal wallet transfers
+    if (tx.kind === 'TRANSFER') {
+      if (tx.direction === 'IN') totalFeeProfit += Number(tx.amount)
+      if (tx.direction === 'OUT') totalFeeProfit -= Number(tx.amount)
+      return; // Do not inflate Money IN/OUT totals with internal transfers
+    }
     if (tx.direction === 'IN') totalIn += Number(tx.amount)
     if (tx.direction === 'OUT') totalOut += Number(tx.amount)
   })
 
-  return { in: totalIn, out: totalOut }
+  return { in: totalIn, out: totalOut, profit: totalFeeProfit }
 }
 
 export async function searchTransactions(params: {
