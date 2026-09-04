@@ -13,6 +13,7 @@ export type TransactionInput = {
   note?: string
   exchange_wallet_id?: string
   exchange_fee?: number
+  is_personal_transfer?: boolean
 }
 
 export async function getTransaction(id: string) {
@@ -31,6 +32,10 @@ export async function getTransaction(id: string) {
 }
 
 export async function createTransaction(input: TransactionInput) {
+  if (!input.amount || isNaN(input.amount) || input.amount <= 0) {
+    throw new Error('Transaction amount must be greater than 0.')
+  }
+
   // 1. Handle contact matching/creation if name is provided
   let finalContactId = input.contact_id
 
@@ -108,28 +113,57 @@ export async function createTransaction(input: TransactionInput) {
     let exchangeAmount = input.amount
     let exchangeDirection = 'IN'
     
-    if (input.direction === 'IN') {
-      // Customer sent to GCash (IN). User gives physical Cash (OUT).
-      // Example: 1000 IN GCash. Fee 10. Cash OUT 990.
-      exchangeDirection = 'OUT'
-      exchangeAmount = input.amount - fee
-    } else {
-      // Customer wants 1000 in GCash. User sends from GCash (OUT). Customer gives Cash (IN).
-      // Example: 1000 OUT GCash. Fee 10. Cash IN 1010.
-      exchangeDirection = 'IN'
-      exchangeAmount = input.amount + fee
-    }
-
-    if (exchangeAmount > 0) {
+    if (input.is_personal_transfer) {
+      // Personal Transfer: Base amounts match exactly. The fee is an EXPENSE.
+      exchangeDirection = input.direction === 'IN' ? 'OUT' : 'IN'
+      
+      // Create the matching exchange
       await supabase.from('transactions').insert({
         wallet_id: input.exchange_wallet_id,
         contact_id: finalContactId || null,
-        amount: exchangeAmount,
+        amount: input.amount,
         direction: exchangeDirection,
         kind: 'TRANSFER',
-        note: `Exchange / Transfer Fee: ₱${fee}`,
+        note: input.note || 'Personal Transfer',
         transfer_group_id: transferGroupId
       })
+
+      // Create a 3rd transaction for the fee as an EXPENSE
+      if (fee > 0) {
+        // If money went OUT (e.g. GCash -> Cash), the fee was charged to the Source (GCash).
+        // If money came IN (e.g. Cash -> GCash), the fee was charged to the Exchange Wallet (Cash).
+        const feeWalletId = input.direction === 'OUT' ? input.wallet_id : input.exchange_wallet_id
+        
+        await supabase.from('transactions').insert({
+          wallet_id: feeWalletId,
+          amount: fee,
+          direction: 'OUT',
+          kind: 'EXPENSE',
+          note: 'Transfer Fee',
+          transfer_group_id: transferGroupId
+        })
+      }
+    } else {
+      // Customer Transfer: The fee is applied directly to the exchange wallet amount.
+      if (input.direction === 'IN') {
+        exchangeDirection = 'OUT'
+        exchangeAmount = input.amount - fee
+      } else {
+        exchangeDirection = 'IN'
+        exchangeAmount = input.amount + fee
+      }
+
+      if (exchangeAmount > 0) {
+        await supabase.from('transactions').insert({
+          wallet_id: input.exchange_wallet_id,
+          contact_id: finalContactId || null,
+          amount: exchangeAmount,
+          direction: exchangeDirection,
+          kind: 'TRANSFER',
+          note: `Exchange / Transfer Fee: ₱${fee}`,
+          transfer_group_id: transferGroupId
+        })
+      }
     }
   }
 
@@ -274,10 +308,41 @@ export async function voidTransaction(id: string) {
 
     // 3. Cascading void for BORROWED / LENT
     if (tx.kind === 'BORROWED' || tx.kind === 'LENT') {
-      await supabase
+      // Find the obligation
+      const { data: ob } = await supabase
         .from('obligations')
-        .update({ status: 'voided' })
+        .select('id')
         .eq('origin_transaction_id', id)
+        .single()
+        
+      if (ob) {
+        // Find all repayments for this obligation
+        const { data: reps } = await supabase
+          .from('obligation_repayments')
+          .select('transaction_id')
+          .eq('obligation_id', ob.id)
+          
+        if (reps && reps.length > 0) {
+          const repTxIds = reps.map(r => r.transaction_id)
+          // Void the repayment transactions
+          await supabase
+            .from('transactions')
+            .update({ status: 'voided' })
+            .in('id', repTxIds)
+            
+          // Delete the linking records
+          await supabase
+            .from('obligation_repayments')
+            .delete()
+            .eq('obligation_id', ob.id)
+        }
+        
+        // Void the obligation itself
+        await supabase
+          .from('obligations')
+          .update({ status: 'voided' })
+          .eq('id', ob.id)
+      }
     }
 
     // 4. Cascading fix for REPAYMENTS

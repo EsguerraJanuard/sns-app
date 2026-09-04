@@ -36,10 +36,12 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
   const defaultExchangeId = wallets.find(w => w.slug === 'cash')?.id || ''
   const [exchangeWalletId, setExchangeWalletId] = useState<string>(defaultExchangeId)
   const [exchangeFee, setExchangeFee] = useState<string>('')
+  const [isPersonalTransfer, setIsPersonalTransfer] = useState(false)
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const [confirmChecked, setConfirmChecked] = useState(false)
 
@@ -118,7 +120,10 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
     e.preventDefault()
     
     const newErrors = []
-    if (!amount) newErrors.push("Ilagay kung Magkano")
+    const numAmount = Number(amount.replace(/,/g, ''))
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      newErrors.push("Ilagay kung magkano (Dapat higit sa 0)")
+    }
     if (!direction) newErrors.push("Piliin kung Pumasok o Lumabas")
     if (!walletId) newErrors.push("Piliin kung Saan (Wallet)")
     if (isCustomerDebt && !contactName) newErrors.push("Kailangan ang pangalan kapag Inutang ng Customer")
@@ -138,6 +143,7 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
   const executeSubmit = async () => {
     if (!confirmChecked) return
     setIsSubmitting(true)
+    setSubmitError(null)
     
     let kind: 'REGULAR' | 'BORROWED' | 'LENT' | 'EXPENSE' = 'REGULAR'
     if (direction === 'IN' && isBorrowed) kind = 'BORROWED'
@@ -152,16 +158,17 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
         wallet_id: walletId,
         kind: kind as any,
         exchange_wallet_id: exchangeWalletId || undefined,
-        exchange_fee: (exchangeWalletId && isFeeApplicable && exchangeFee) ? Number(exchangeFee) : 0
+        exchange_fee: (exchangeWalletId && isFeeApplicable && exchangeFee) ? Number(exchangeFee) : 0,
+        is_personal_transfer: isPersonalTransfer
       })
       
       setIsSuccess(true)
       setTimeout(() => {
         router.push('/')
       }, 1500)
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
-      alert("We couldn't save this transaction. Please try again.")
+      setSubmitError(error.message || "Hindi ma-save ang transaction na ito. Paki-try ulit.")
       setIsSubmitting(false)
     }
   }
@@ -188,6 +195,25 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
   if (step === 2) {
     return (
       <div className="flex flex-col min-h-screen bg-zinc-50 relative pb-32">
+        {/* Error Modal Overlay */}
+        {submitError && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
+                <AlertCircle size={40} strokeWidth={2.5} />
+              </div>
+              <h3 className="text-2xl font-black text-zinc-900 mb-2">May Problema</h3>
+              <p className="text-lg font-bold text-zinc-500 mb-8">{submitError}</p>
+              
+              <button 
+                onClick={() => setSubmitError(null)}
+                className="w-full bg-zinc-900 text-white rounded-2xl py-4 text-xl font-black uppercase tracking-widest active:scale-95 transition-transform"
+              >
+                OKAY
+              </button>
+            </div>
+          </div>
+        )}
         <header className={`${direction === 'IN' ? 'bg-green-500' : 'bg-blue-500'} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
           <div className="flex items-center mb-8">
             <button onClick={() => setStep(1)} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
@@ -244,27 +270,53 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                   <div className="h-px bg-zinc-200 my-2" />
                   
                   {direction === 'OUT' ? (
-                    <>
-                      <div className="flex justify-between items-center text-sm font-bold text-red-600">
-                        <span>Total Deducted ({selectedWalletName})</span>
-                        <span>-₱{amount}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm font-black text-green-600">
-                        <span>Total Added ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
-                        <span>+₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
-                      </div>
-                    </>
+                    isPersonalTransfer ? (
+                      <>
+                        <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                          <span>Total Deducted ({selectedWalletName})</span>
+                          <span>-₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-black text-green-600">
+                          <span>Total Added ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                          <span>+₱{amount}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                          <span>Total Deducted ({selectedWalletName})</span>
+                          <span>-₱{amount}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-black text-green-600">
+                          <span>Total Added ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                          <span>+₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    )
                   ) : (
-                    <>
-                      <div className="flex justify-between items-center text-sm font-black text-green-600">
-                        <span>Total Added ({selectedWalletName})</span>
-                        <span>+₱{amount}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm font-bold text-red-600">
-                        <span>Total Deducted ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
-                        <span>-₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
-                      </div>
-                    </>
+                    isPersonalTransfer ? (
+                      <>
+                        <div className="flex justify-between items-center text-sm font-black text-green-600">
+                          <span>Total Added ({selectedWalletName})</span>
+                          <span>+₱{amount}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                          <span>Total Deducted ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                          <span>-₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center text-sm font-black text-green-600">
+                          <span>Total Added ({selectedWalletName})</span>
+                          <span>+₱{amount}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                          <span>Total Deducted ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
+                          <span>-₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
               </div>
@@ -601,30 +653,75 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                   </div>
                 </div>
               )}
+
+              {/* Personal Transfer Toggle */}
+              {isFeeApplicable && exchangeFee && Number(exchangeFee) > 0 && (
+                <label className={`
+                  flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-colors shadow-sm mt-4
+                  ${isPersonalTransfer ? 'bg-zinc-800 border-zinc-900 text-white' : 'bg-white border-zinc-200 hover:bg-zinc-50'}
+                `}>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className={`text-base font-black uppercase tracking-wider ${isPersonalTransfer ? 'text-white' : 'text-zinc-700'}`}>Sarili kong Transfer</p>
+                    <p className={`text-sm font-bold ${isPersonalTransfer ? 'text-zinc-400' : 'text-zinc-400'}`}>Ibawas ang fee sa laman ng wallet ko</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={isPersonalTransfer}
+                    onChange={(e) => setIsPersonalTransfer(e.target.checked)}
+                    className="w-7 h-7 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 bg-white"
+                  />
+                </label>
+              )}
                 
                 <div className="text-lg sm:text-xl font-bold text-zinc-500 space-y-4 bg-white p-6 rounded-3xl border-2 border-zinc-100 shadow-sm mt-4">
                   {direction === 'OUT' ? (
-                    <>
-                      <div className="flex justify-between items-center text-red-500">
-                        <span>From {selectedWalletName || 'Wallet'}</span>
-                        <span className="text-2xl sm:text-3xl font-black">- ₱{amount || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-green-600 font-black">
-                        <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
-                        <span className="text-3xl sm:text-4xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
-                      </div>
-                    </>
+                    isPersonalTransfer ? (
+                      <>
+                        <div className="flex justify-between items-center text-red-500">
+                          <span>From {selectedWalletName || 'Wallet'}</span>
+                          <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-green-600 font-black">
+                          <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                          <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center text-red-500">
+                          <span>From {selectedWalletName || 'Wallet'}</span>
+                          <span className="text-2xl sm:text-3xl font-black">- ₱{amount || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-green-600 font-black">
+                          <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                          <span className="text-3xl sm:text-4xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    )
                   ) : (
-                    <>
-                      <div className="flex justify-between items-center text-green-600 font-black">
-                        <span>To {selectedWalletName || 'Wallet'}</span>
-                        <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-red-500">
-                        <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
-                        <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
-                      </div>
-                    </>
+                    isPersonalTransfer ? (
+                      <>
+                        <div className="flex justify-between items-center text-green-600 font-black">
+                          <span>To {selectedWalletName || 'Wallet'}</span>
+                          <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-red-500">
+                          <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                          <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center text-green-600 font-black">
+                          <span>To {selectedWalletName || 'Wallet'}</span>
+                          <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-red-500">
+                          <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                          <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
               </div>
