@@ -90,7 +90,7 @@ export default async function DashboardPage() {
             <section className="bg-amber-100/60 rounded-3xl p-4 px-6 shadow-sm border border-amber-200/50 flex items-center justify-between">
               <div className="text-amber-700 font-black uppercase tracking-widest text-xs flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-                Kinita sa Fees
+                Tubo
               </div>
               <div className="text-amber-600 font-black text-xl tracking-tighter">
                 {todaySummary.profit > 0 ? '+' : ''}{formatPHPCompact(todaySummary.profit)}
@@ -286,7 +286,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Profit History */}
-      {profitHistory.length > 0 && profitHistory.some(p => p.profit !== 0) && (
+      {profitHistory.length > 0 && (
         <section className="px-5 space-y-3 pt-4 mb-32 relative z-10">
           <div className="flex items-center gap-2 mb-2 px-1">
             <div className="w-2 h-2 rounded-full bg-amber-500"></div>
