@@ -62,9 +62,23 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
       </header>
+
+      {/* QR Code Section (Only for known wallets) */}
+      {(slug === 'gcash' || slug === 'maya' || slug === 'maribank') && (
+        <div className="px-5 pt-6 -mt-6 relative z-20 flex justify-center">
+          <div className="bg-white w-full rounded-3xl p-5 shadow-sm border border-zinc-100 flex flex-col items-center">
+            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">Scan to Pay / Send</h3>
+            <img 
+              src={`/qr/${slug}.${slug === 'maribank' ? 'png' : 'jpg'}`} 
+              alt={`${wallet.name} QR Code`} 
+              className="w-full max-w-[16rem] aspect-square object-contain rounded-2xl"
+            />
+          </div>
+        </div>
+      )}
       
       {/* Reconciliation Call to action */}
-      <div className="px-5 py-6 -mt-6 relative z-20">
+      <div className={`px-5 py-4 relative ${slug === 'gcash' || slug === 'maya' || slug === 'maribank' ? 'z-10' : 'z-20 -mt-6'}`}>
         <Link href={`/wallets/${wallet.slug}/check`} className="bg-white border-2 border-zinc-100 rounded-3xl p-5 flex items-center justify-between shadow-sm active:scale-95 transition-transform">
           <div>
             <div className="font-extrabold text-xl text-zinc-900">Check Balance</div>
