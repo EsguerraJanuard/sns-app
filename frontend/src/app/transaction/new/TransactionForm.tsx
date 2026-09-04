@@ -436,7 +436,7 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                 <label 
                   key={w.id} 
                   className={`
-                    relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                    relative flex items-center justify-center p-5 rounded-3xl cursor-pointer transition-all border-2
                     ${isSelected ? `bg-white ${Brand.border} ${Brand.shadow} shadow-md` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
                     ${isLastOdd ? 'col-span-2' : ''}
                   `}
@@ -455,9 +455,9 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                     }}
                     className="sr-only peer"
                   />
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
-                      <Icon size={20} strokeWidth={2.5} />
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors shadow-sm`}>
+                      <Icon size={24} strokeWidth={2.5} />
                     </div>
                     <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>
                       {w.name}
@@ -470,16 +470,16 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
         </section>
 
         {/* EXCHANGE / KAPALIT WALLET */}
-        <section className="space-y-2 mt-6">
+        <section className="space-y-3 mt-8">
           <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider block px-1">
             {direction === 'OUT' ? 'DESTINATION WALLET' : 'SOURCE WALLET'}
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             
             {/* TOP BIG BUTTON: ALWAYS CASH (Hide if Source is already Cash) */}
             {walletId !== wallets.find(w => w.slug === 'cash')?.id && (
               <label className={`
-                col-span-2 flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                col-span-2 flex items-center justify-center p-5 rounded-3xl cursor-pointer transition-all border-2
                 ${exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id ? 'bg-zinc-800 text-white border-zinc-800 shadow-md' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50 hover:border-zinc-200'}
               `}>
                 <input 
@@ -496,11 +496,11 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                   }} 
                   className="sr-only" 
                 />
-                <div className="flex flex-col items-center gap-1 w-full">
-                  <span className="text-base font-black uppercase tracking-widest leading-tight text-center w-full">
+                <div className="flex flex-col items-center gap-2 w-full">
+                  <span className="text-lg font-black uppercase tracking-widest leading-tight text-center w-full">
                     CASH
                   </span>
-                  <span className={`text-[10px] font-bold text-center w-full uppercase tracking-widest ${exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id ? 'text-zinc-400' : 'text-zinc-300'}`}>
+                  <span className={`text-xs font-bold text-center w-full uppercase tracking-widest ${exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id ? 'text-zinc-400' : 'text-zinc-300'}`}>
                     Pisikal na Pera
                   </span>
                 </div>
@@ -514,7 +514,7 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
               
               return (
                 <label key={w.id} className={`
-                  relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+                  relative flex items-center justify-center p-5 rounded-3xl cursor-pointer transition-all border-2
                   ${isSelected ? `bg-white ${Brand.border} ${Brand.shadow} shadow-md` : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'}
                 `}>
                   <input type="radio" name="exchangeWallet" value={w.id} checked={isSelected} onChange={() => {
@@ -523,9 +523,9 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                     setIsCustomerDebt(false)
                     setIsBorrowed(false)
                   }} className="sr-only" />
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors`}>
-                      <Brand.icon size={20} strokeWidth={2.5} />
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSelected ? Brand.solidBg : Brand.bg} ${isSelected ? 'text-white' : Brand.color} transition-colors shadow-sm`}>
+                      <Brand.icon size={24} strokeWidth={2.5} />
                     </div>
                     <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${isSelected ? `font-black ${Brand.color}` : 'font-bold text-zinc-400'}`}>{w.name}</span>
                   </div>
@@ -535,7 +535,7 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
             
             {/* SPECIAL CARD: EXPENSES */}
             <label className={`
-              relative flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border
+              relative flex items-center justify-center p-5 rounded-3xl cursor-pointer transition-all border-2
               ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-800 text-white shadow-md border-zinc-800' : 'bg-white border-zinc-100 text-zinc-400 hover:bg-zinc-50'}
               ${(wallets.filter(w => w.id !== walletId && w.slug !== 'cash').length % 2 === 0) ? 'col-span-2' : ''} 
             `}>
@@ -555,9 +555,9 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                 }} 
                 className="sr-only" 
               />
-              <div className="flex flex-col items-center gap-2 w-full">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-400'} transition-colors`}>
-                  {direction === 'OUT' ? <Receipt size={20} strokeWidth={2.5} /> : <XCircle size={20} strokeWidth={2.5} />}
+              <div className="flex flex-col items-center gap-3 w-full">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-400'} transition-colors shadow-sm`}>
+                  {direction === 'OUT' ? <Receipt size={24} strokeWidth={2.5} /> : <XCircle size={24} strokeWidth={2.5} />}
                 </div>
                 <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'font-black text-white' : 'font-bold text-zinc-400'}`}>
                   {direction === 'OUT' ? 'EXPENSE / BILLS' : 'NO DEDUCTION'}
@@ -573,14 +573,14 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
               {/* Quick Fee Buttons */}
               {isFeeApplicable && (
                 <div>
-                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Quick Fee (Discount)</div>
+                  <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">Quick Fee (Discount)</div>
                   <div className="flex flex-wrap gap-2">
                     {(isLoadInvolved ? [0, 5, 10, 15, 20] : [0, 5, 10, 15, 20, 25, 30]).map(val => (
                       <button
                         key={val}
                         type="button"
                         onClick={() => setExchangeFee(val.toString())}
-                        className={`px-3 py-1.5 rounded-xl text-sm font-black transition-all border-2 active:scale-95 ${exchangeFee === val.toString() ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                        className={`px-4 py-3 rounded-2xl text-lg sm:text-xl font-black transition-all border-2 active:scale-95 ${exchangeFee === val.toString() ? 'bg-blue-100 border-blue-500 text-blue-700 shadow-sm' : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
                       >
                         ₱{val}
                       </button>
@@ -590,28 +590,40 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
               )}
 
               {isFeeApplicable && (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-base font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Fee: ₱</span>
                   <input 
                     type="number"
                     value={exchangeFee}
                     onChange={(e) => setExchangeFee(e.target.value)}
-                    className="w-full bg-white rounded-xl border-2 border-zinc-200 px-4 py-3 text-2xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-white rounded-2xl border-2 border-zinc-200 px-5 py-4 text-3xl font-black text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
                     placeholder="0"
                   />
                 </div>
               )}
                 
-                <div className="text-xs font-bold text-zinc-500 space-y-1.5 bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
+                <div className="text-sm font-bold text-zinc-500 space-y-2 bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm mt-4">
                   {direction === 'OUT' ? (
                     <>
-                      <div className="flex justify-between text-red-500"><span>From {selectedWalletName || 'Wallet'}</span> <span>- ₱{amount || 0}</span></div>
-                      <div className="flex justify-between text-green-600 font-black"><span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span></div>
+                      <div className="flex justify-between items-center text-red-500">
+                        <span>From {selectedWalletName || 'Wallet'}</span>
+                        <span className="text-lg font-black">- ₱{amount || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-green-600 font-black">
+                        <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                        <span className="text-xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
+                      </div>
                     </>
                   ) : (
                     <>
-                      <div className="flex justify-between text-green-600 font-black"><span>To {selectedWalletName || 'Wallet'}</span> <span>+ ₱{amount || 0}</span></div>
-                      <div className="flex justify-between text-red-500"><span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span> <span>- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span></div>
+                      <div className="flex justify-between items-center text-green-600 font-black">
+                        <span>To {selectedWalletName || 'Wallet'}</span>
+                        <span className="text-xl">+ ₱{amount || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-red-500">
+                        <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                        <span className="text-lg font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                      </div>
                     </>
                   )}
                 </div>
@@ -622,12 +634,12 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
         {direction === 'IN' && (
           <section>
             <label className={`
-              flex items-center gap-4 p-5 rounded-2xl border cursor-pointer transition-colors
+              flex items-center gap-4 p-6 rounded-3xl border-2 cursor-pointer transition-colors shadow-sm mt-4
               ${isBorrowed ? 'bg-red-50 border-red-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
             `}>
               <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isBorrowed ? 'text-red-700' : 'text-zinc-700'}`}>Borrowed</p>
-                <p className={`text-sm font-medium ${isBorrowed ? 'text-red-600/70' : 'text-zinc-400'}`}>Check if this money is borrowed</p>
+                <p className={`text-xl sm:text-2xl font-black truncate ${isBorrowed ? 'text-red-700' : 'text-zinc-700'}`}>Borrowed</p>
+                <p className={`text-base font-medium ${isBorrowed ? 'text-red-600/70' : 'text-zinc-400'}`}>Check if this money is borrowed</p>
               </div>
               <input 
                 type="checkbox" 
@@ -636,21 +648,21 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                   setIsBorrowed(e.target.checked)
                   if (e.target.checked) setExchangeWalletId('')
                 }}
-                className="w-7 h-7 rounded-lg border-zinc-300 text-red-600 focus:ring-red-500 bg-white"
+                className="w-8 h-8 rounded-lg border-zinc-300 text-red-600 focus:ring-red-500 bg-white shadow-sm"
               />
             </label>
           </section>
         )}
 
         {direction === 'OUT' && (
-          <section className="space-y-3">
+          <section className="space-y-3 mt-4">
             <label className={`
-              flex items-center gap-4 p-5 rounded-2xl border cursor-pointer transition-colors
+              flex items-center gap-4 p-6 rounded-3xl border-2 cursor-pointer transition-colors shadow-sm
               ${isCustomerDebt ? 'bg-orange-50 border-orange-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
             `}>
               <div className="flex-1 min-w-0">
-                <p className={`text-lg font-black truncate ${isCustomerDebt ? 'text-orange-700' : 'text-zinc-700'}`}>Customer Debt</p>
-                <p className={`text-sm font-medium ${isCustomerDebt ? 'text-orange-600/70' : 'text-zinc-400'}`}>Check if this is an unpaid debt</p>
+                <p className={`text-xl sm:text-2xl font-black truncate ${isCustomerDebt ? 'text-orange-700' : 'text-zinc-700'}`}>Customer Debt</p>
+                <p className={`text-base font-medium ${isCustomerDebt ? 'text-orange-600/70' : 'text-zinc-400'}`}>Check if this is an unpaid debt</p>
               </div>
               <input 
                 type="checkbox" 
@@ -662,7 +674,7 @@ export default function TransactionForm({ wallets, initialDirection = null }: { 
                     setExchangeWalletId('')
                   }
                 }}
-                className="w-7 h-7 rounded-lg border-zinc-300 text-orange-600 focus:ring-orange-500 bg-white"
+                className="w-8 h-8 rounded-lg border-zinc-300 text-orange-600 focus:ring-orange-500 bg-white shadow-sm"
               />
             </label>
           </section>
