@@ -67,20 +67,20 @@ export default async function DashboardPage() {
       <div className="px-5 py-6 space-y-8 flex-1 -mt-10 relative z-10">
         
         {/* Today's Summary */}
-        <section className="bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 flex gap-4 divide-x divide-zinc-200">
-          <div className="flex-1 min-w-0">
+        <section className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex divide-x divide-zinc-200">
+          <div className="flex-1 min-w-0 pr-4">
             <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowDownRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY IN
             </div>
-            <div className="text-[1.35rem] sm:text-2xl font-black text-zinc-900 tracking-tighter break-words">{formatPHPCompact(todaySummary.in)}</div>
+            <div className="text-[1.7rem] sm:text-3xl font-black text-zinc-900 tracking-tighter break-words leading-none pt-1">{formatPHPCompact(todaySummary.in)}</div>
           </div>
-          <div className="flex-1 pl-4 min-w-0">
+          <div className="flex-1 min-w-0 pl-4">
             <div className="text-xs sm:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight size={16} className="text-zinc-700" strokeWidth={3} />
               MONEY OUT
             </div>
-            <div className="text-[1.35rem] sm:text-2xl font-black text-zinc-900 tracking-tighter break-words">{formatPHPCompact(todaySummary.out)}</div>
+            <div className="text-[1.7rem] sm:text-3xl font-black text-zinc-900 tracking-tighter break-words leading-none pt-1">{formatPHPCompact(todaySummary.out)}</div>
           </div>
         </section>
         

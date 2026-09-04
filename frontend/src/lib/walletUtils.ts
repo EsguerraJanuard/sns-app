@@ -39,12 +39,12 @@ export const getWalletBrand = (name: string) => {
   if (lower.includes('cash')) {
     return { 
       icon: Banknote, 
-      color: 'text-emerald-600', 
-      bg: 'bg-emerald-100', 
-      headerBg: 'bg-emerald-600', 
-      buttonColor: 'text-emerald-600', 
-      buttonBg: 'bg-emerald-100',
-      peer: 'peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600'
+      color: 'text-amber-600', 
+      bg: 'bg-amber-100', 
+      headerBg: 'bg-amber-500', 
+      buttonColor: 'text-amber-600', 
+      buttonBg: 'bg-amber-100',
+      peer: 'peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500'
     };
   }
   if (lower.includes('auto-supply')) {
