@@ -111,7 +111,7 @@ export default async function TransactionsPage({
                         <input type="radio" id={`wallet-${w.id}`} name="wallet" value={w.id} defaultChecked={isChecked} className="peer sr-only" />
                         <label htmlFor={`wallet-${w.id}`} className={`
                           flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all border-2
-                          ${isChecked ? `bg-white ${Brand.border} shadow-sm ${Brand.shadow}` : 'bg-white border-zinc-100 hover:bg-zinc-50'}
+                          ${isChecked ? 'bg-white border-zinc-900 shadow-md' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
                           peer-checked:border-zinc-900 peer-checked:shadow-md
                         `}>
                           <div className="flex flex-col items-center gap-2 w-full">
