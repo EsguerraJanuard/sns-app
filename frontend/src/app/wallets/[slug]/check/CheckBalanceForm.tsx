@@ -68,7 +68,7 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
     const isLower = result.diff < 0
     
     return (
-      <div className="p-6 pt-24 space-y-8 flex flex-col items-center justify-center text-center bg-zinc-50 min-h-screen">
+      <div className="p-6 pt-24 space-y-8 flex flex-col items-center justify-center text-center bg-zinc-50 min-h-screen pb-32">
         {isExact ? (
           <div className="flex flex-col items-center space-y-6">
             <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center shadow-inner mb-4 relative">
@@ -95,15 +95,13 @@ export default function CheckBalanceForm({ walletId, walletName, expected, slug 
             </div>
           </>
         )}
-        <div className="fixed bottom-0 left-0 right-0 p-5 bg-zinc-50 border-t border-zinc-200/50 pb-safe z-40">
-          <div className="max-w-[400px] mx-auto">
-            <Link 
-              href={`/wallets/${slug}`} 
-              className={`flex items-center justify-center w-full ${isExact ? 'bg-green-600' : Brand.headerBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-all`}
-            >
-              Done
-            </Link>
-          </div>
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent z-50 pointer-events-none max-w-[400px] mx-auto">
+          <Link 
+            href={`/wallets/${slug}`} 
+            className={`flex items-center justify-center w-full ${isExact ? 'bg-green-600' : Brand.headerBg} text-white rounded-[1.5rem] py-5 text-xl font-black uppercase tracking-widest active:scale-95 transition-all pointer-events-auto border-4 border-white shadow-xl shadow-black/10`}
+          >
+            Done
+          </Link>
         </div>
       </div>
     )
