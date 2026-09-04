@@ -36,8 +36,8 @@ export default function LiveClock() {
   }
 
   return (
-    <div className="mb-3">
-      <div className="text-white/90 text-sm font-medium flex items-center gap-1.5">
+    <div className="mb-3 text-center flex flex-col items-center">
+      <div className="text-white/90 text-sm font-medium flex items-center justify-center gap-1.5">
         <span>{formattedDate}</span>
         <span>•</span>
         <span>{formattedTime}</span>

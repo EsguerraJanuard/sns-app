@@ -18,11 +18,11 @@ const getWalletBrand = (name: string) => {
   return { icon: WalletIcon, color: 'text-zinc-500', border: 'border-zinc-200', bg: 'bg-zinc-100', solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30' };
 };
 
-export default function TransactionForm({ wallets }: { wallets: Wallet[] }) {
+export default function TransactionForm({ wallets, initialDirection = null }: { wallets: Wallet[], initialDirection?: 'IN' | 'OUT' | null }) {
   const router = useRouter()
   const [step, setStep] = useState<1 | 2>(1)
   
-  const [direction, setDirection] = useState<'IN' | 'OUT' | null>(null)
+  const [direction, setDirection] = useState<'IN' | 'OUT' | null>(initialDirection)
   const [contactName, setContactName] = useState('')
   const [contactSuggestions, setContactSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
