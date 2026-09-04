@@ -62,22 +62,31 @@ export async function getTopContacts(limit: number = 3) {
   const { data } = await supabase
     .from('transactions')
     .select(`
+      id,
+      transfer_group_id,
       contact_id,
       contact:contacts(id, name)
     `)
     .not('contact_id', 'is', null)
     .neq('status', 'voided')
     .order('created_at', { ascending: false })
-    .limit(200)
+    .limit(300)
 
   if (!data) return []
 
   const tally: Record<string, { id: string, name: string, count: number }> = {}
+  const processedGroups = new Set<string>()
 
   data.forEach((tx: any) => {
     if (tx.contact) {
       // Handle Supabase relation typing (sometimes array, sometimes object)
       const c = Array.isArray(tx.contact) ? tx.contact[0] : tx.contact
+      
+      // Prevent double counting 2-part/3-part transfers
+      const uniqueId = tx.transfer_group_id || tx.id
+      if (processedGroups.has(uniqueId)) return
+      processedGroups.add(uniqueId)
+
       if (!tally[c.id]) {
         tally[c.id] = { id: c.id, name: c.name, count: 0 }
       }
