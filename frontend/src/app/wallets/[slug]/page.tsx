@@ -107,7 +107,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
               return (
                 <Link href={`/transactions/${tx.id}`} key={tx.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 active:bg-zinc-100 transition-colors gap-3 block">
                   <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${isIn ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                    <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-sm ${Brand.bg} ${Brand.color}`}>
                       {isIn ? <ArrowDownRight size={28} strokeWidth={3} /> : <ArrowUpRight size={28} strokeWidth={3} />}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -125,7 +125,7 @@ export default async function WalletPage({ params }: { params: Promise<{ slug: s
                       </div>
                     </div>
                   </div>
-                  <div className="text-2xl shrink-0 font-black tracking-tighter text-zinc-900">
+                  <div className={`text-2xl shrink-0 font-black tracking-tighter ${Brand.color}`}>
                     {isIn ? '+' : '-'}{formatPHPCompact(tx.amount)}
                   </div>
                 </Link>

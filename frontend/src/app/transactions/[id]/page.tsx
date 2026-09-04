@@ -41,7 +41,7 @@ export default async function TransactionDetailsPage({
   return (
     <main className="flex flex-col min-h-screen bg-zinc-50 relative pb-24">
       {/* Header */}
-      <header className={`${isVoided ? 'bg-zinc-800' : (isIn ? 'bg-green-500' : 'bg-blue-500')} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
+      <header className={`${isVoided ? 'bg-zinc-800' : Brand.headerBg} text-white px-5 pt-8 pb-14 shadow-sm rounded-b-[2.5rem] relative z-20`}>
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
             <ChevronLeft size={32} />
