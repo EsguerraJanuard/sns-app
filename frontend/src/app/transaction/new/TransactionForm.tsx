@@ -296,11 +296,11 @@ export default function TransactionForm({
                     <>
                       <div className="flex justify-between items-center text-sm font-black text-green-600">
                         <span>Total Added ({selectedWalletName})</span>
-                        <span>+₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                        <span>+₱{amount}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm font-bold text-red-600">
                         <span>Total Deducted ({wallets.find(w => w.id === exchangeWalletId)?.name})</span>
-                        <span>-₱{amount}</span>
+                        <span>-₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
                       </div>
                     </>
                   )}
@@ -656,11 +656,11 @@ export default function TransactionForm({
                     <>
                       <div className="flex justify-between items-center text-green-600 font-black">
                         <span>To {selectedWalletName || 'Wallet'}</span>
-                        <span className="text-3xl sm:text-4xl">+ ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
+                        <span className="text-3xl sm:text-4xl">+ ₱{amount || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-red-500">
                         <span>From {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
-                        <span className="text-2xl sm:text-3xl font-black">- ₱{amount || 0}</span>
+                        <span className="text-2xl sm:text-3xl font-black">- ₱{Number(amount.replace(/,/g, '') || 0) - Number(exchangeFee || 0)}</span>
                       </div>
                     </>
                   )}
