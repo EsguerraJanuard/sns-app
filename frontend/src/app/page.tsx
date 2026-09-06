@@ -46,10 +46,8 @@ export default async function DashboardPage() {
   const maya = wallets.find(w => w.name.toLowerCase().includes('maya'))
   const maribank = wallets.find(w => w.name.toLowerCase().includes('maribank'))
   const cash = wallets.find(w => w.slug === 'cash')
-  const load = wallets.find(w => w.name.toLowerCase().includes('load'))
-  const autosupply = wallets.find(w => w.name.toLowerCase().includes('auto-supply'))
   
-  const orderedWallets = [gcash, maya, maribank, cash, load, autosupply].filter(Boolean) as any[]
+  const orderedWallets = [gcash, maya, maribank, cash].filter(Boolean) as any[]
 
   return (
     <main className="flex flex-col flex-1 w-full pb-40 bg-zinc-50 min-h-screen relative">

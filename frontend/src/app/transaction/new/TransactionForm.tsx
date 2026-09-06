@@ -3,18 +3,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowDownRight, ArrowUpRight, Search, CheckCircle2, Wallet as WalletIcon, ChevronLeft, Car, Smartphone, Landmark, AlertCircle, AlertTriangle, Receipt, XCircle, DollarSign } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Search, CheckCircle2, Wallet as WalletIcon, ChevronLeft, Car, Smartphone, Landmark, AlertCircle, AlertTriangle, Receipt, XCircle, DollarSign, Banknote } from 'lucide-react'
 import { Wallet } from '@/actions/wallet'
 import { searchContacts } from '@/actions/contact'
 import { createTransaction } from '@/actions/transaction'
+import { supabase } from '@/lib/supabase'
 
 const getWalletBrand = (name: string) => {
   const lower = name.toLowerCase();
   if (lower.includes('maya')) return { icon: WalletIcon, color: 'text-green-600', border: 'border-green-200', bg: 'bg-green-50', solidBg: 'bg-green-600', shadow: 'shadow-green-600/30' };
   if (lower.includes('gcash')) return { icon: WalletIcon, color: 'text-blue-500', border: 'border-blue-200', bg: 'bg-blue-50', solidBg: 'bg-blue-600', shadow: 'shadow-blue-600/30' };
   if (lower.includes('maribank')) return { icon: Landmark, color: 'text-orange-500', border: 'border-orange-200', bg: 'bg-orange-50', solidBg: 'bg-orange-500', shadow: 'shadow-orange-500/30' };
-  if (lower.includes('auto-supply')) return { icon: Car, color: 'text-zinc-700', border: 'border-zinc-300', bg: 'bg-zinc-200', solidBg: 'bg-zinc-800', shadow: 'shadow-zinc-800/30' };
-  if (lower.includes('load')) return { icon: Smartphone, color: 'text-purple-600', border: 'border-purple-200', bg: 'bg-purple-50', solidBg: 'bg-purple-600', shadow: 'shadow-purple-600/30' };
+  if (lower.includes('cash')) return { icon: Banknote, color: 'text-amber-600', border: 'border-amber-200', bg: 'bg-amber-50', solidBg: 'bg-amber-500', shadow: 'shadow-amber-500/30' };
   return { icon: WalletIcon, color: 'text-zinc-500', border: 'border-zinc-200', bg: 'bg-zinc-100', solidBg: 'bg-[#4A4A4A]', shadow: 'shadow-[#4A4A4A]/30' };
 };
 
@@ -40,6 +40,14 @@ export default function TransactionForm({
   const [isBorrowed, setIsBorrowed] = useState(false) // For IN
   const [isCustomerDebt, setIsCustomerDebt] = useState(false) // For OUT
   const [isExpense, setIsExpense] = useState(false) // For OUT
+
+  const [fundingDebtAmount, setFundingDebtAmount] = useState('')
+  const [fundingDebtContact, setFundingDebtContact] = useState('')
+  const [showFundingDebt, setShowFundingDebt] = useState(false)
+  const fundingContactRef = useRef<HTMLInputElement>(null)
+  const [fundingContactSuggestions, setFundingContactSuggestions] = useState<any[]>([])
+  const [showFundingSuggestions, setShowFundingSuggestions] = useState(false)
+  const [note, setNote] = useState('')
   
   const defaultExchangeId = wallets.find(w => w.slug === 'cash')?.id || ''
   const [exchangeWalletId, setExchangeWalletId] = useState<string>(defaultExchangeId)
@@ -88,6 +96,74 @@ export default function TransactionForm({
   const selectContact = (name: string) => {
     setContactName(name)
     setShowSuggestions(false)
+    contactRef.current?.blur()
+  }
+
+  const handleFundingContactSearch = async (val: string) => {
+    setFundingDebtContact(val)
+    if (val.length > 0) {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .ilike('name', `%${val}%`)
+        .order('last_transaction_at', { ascending: false })
+        .limit(3)
+      setFundingContactSuggestions(data || [])
+      setShowFundingSuggestions(true)
+    } else {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('last_transaction_at', { ascending: false })
+        .limit(3)
+      setFundingContactSuggestions(data || [])
+      setShowFundingSuggestions(true)
+    }
+  }
+
+  const selectFundingContact = (name: string) => {
+    setFundingDebtContact(name)
+    setShowFundingSuggestions(false)
+    fundingContactRef.current?.blur()
+  }
+
+  const deductedWalletId = direction === 'OUT' ? walletId : exchangeWalletId;
+  const deductedWallet = wallets.find(w => w.id === deductedWalletId);
+  // @ts-ignore - Wallet With Balance injected at runtime
+  const deductedWalletBalance = deductedWallet ? (deductedWallet.expected_balance || 0) : 0;
+  
+  const rawAmount = Number(amount.replace(/,/g, '') || 0);
+  const rawFee = Number(exchangeFee || 0);
+  const rawFundingDebt = Number(fundingDebtAmount.replace(/,/g, '') || 0);
+  
+  // If it's IN and no exchange wallet, we are not deducting anything!
+  const deductedAmount = !deductedWalletId ? 0 : (direction === 'OUT' ? rawAmount : (rawAmount - rawFee));
+  
+  const projectedBalance = deductedWalletBalance + (showFundingDebt ? rawFundingDebt : 0) - deductedAmount;
+
+  const validate = () => {
+    const newErrors: string[] = []
+    if (!walletId) newErrors.push("Pumili ng main wallet")
+    if (!amount || isNaN(rawAmount) || rawAmount <= 0) {
+      newErrors.push("Maglagay ng tamang halaga (Amount)")
+    }
+    
+    if (isCustomerDebt && !contactName) newErrors.push("Kailangan ang pangalan kapag Inutang ng Customer")
+    if (isBorrowed && !contactName) newErrors.push("Kailangan ang pangalan kung kanino inutang")
+    
+    if (showFundingDebt) {
+      if (!fundingDebtAmount || isNaN(rawFundingDebt) || rawFundingDebt <= 0) {
+        newErrors.push("Maglagay ng tamang halaga para sa inutang na pampuno")
+      }
+      if (!fundingDebtContact) newErrors.push("Kailangan ang pangalan kung kanino nanghiram pampuno")
+    }
+
+    if (projectedBalance < 0) {
+      newErrors.push(`Hindi sapat ang pondo sa ${deductedWallet?.name}. Gumamit ng Nanghiram Pampuno kung may hiniram kang pandagdag.`)
+    }
+
+    setErrors(newErrors)
+    return newErrors.length === 0
   }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,13 +189,10 @@ export default function TransactionForm({
       const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
       const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
       const isBankInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank'))
-      const isLoadInvolved = [w1, w2].some(n => n.includes('load'))
 
       if (isBankInvolved) {
         const computedFee = Math.ceil(numAmount / 1000) * 10
         setExchangeFee(computedFee.toString())
-      } else if (isLoadInvolved) {
-        setExchangeFee('5')
       } else {
         setExchangeFee('0')
       }
@@ -128,28 +201,14 @@ export default function TransactionForm({
     }
   }, [amount, walletId, exchangeWalletId, wallets])
 
-  const handleNextClick = (e: React.FormEvent) => {
+  const handleNext = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const newErrors = []
-    const numAmount = Number(amount.replace(/,/g, ''))
-    if (!amount || isNaN(numAmount) || numAmount <= 0) {
-      newErrors.push("Ilagay kung magkano (Dapat higit sa 0)")
-    }
-    if (!direction) newErrors.push("Piliin kung Pumasok o Lumabas")
-    if (!walletId) newErrors.push("Piliin kung Saan (Wallet)")
-    if (isCustomerDebt && !contactName) newErrors.push("Kailangan ang pangalan kapag Inutang ng Customer")
-    if (isBorrowed && !contactName) newErrors.push("Kailangan ang pangalan kapag Nangutang ka")
-    
-    if (newErrors.length > 0) {
-      setErrors(newErrors)
+    if (validate()) {
+      setStep(2)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-
-    setErrors([])
-    setStep(2)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const executeSubmit = async () => {
@@ -162,25 +221,33 @@ export default function TransactionForm({
     if (direction === 'OUT' && isCustomerDebt) kind = 'LENT'
     if (direction === 'OUT' && isExpense) kind = 'EXPENSE'
 
+    const payload = {
+      wallet_id: walletId,
+      amount: Number(amount.replace(/,/g, '')),
+      direction: direction!,
+      kind,
+      contact_name: contactName || undefined,
+      exchange_wallet_id: exchangeWalletId || undefined,
+      exchange_fee: (exchangeWalletId || isCustomerDebt) ? Number(exchangeFee || 0) : undefined,
+      note: note || undefined,
+      funding_debt_amount: showFundingDebt ? Number(fundingDebtAmount.replace(/,/g, '')) : undefined,
+      funding_debt_contact: showFundingDebt ? fundingDebtContact : undefined
+    }
+
     try {
-      await createTransaction({
-        direction: direction!,
-        contact_name: contactName || undefined,
-        amount: Number(amount.replace(/,/g, '')),
-        wallet_id: walletId,
-        kind: kind as any,
-        exchange_wallet_id: exchangeWalletId || undefined,
-        exchange_fee: (exchangeWalletId && isFeeApplicable && exchangeFee) ? Number(exchangeFee) : 0,
-        is_personal_transfer: false
-      })
-      
-      setIsSuccess(true)
-      setTimeout(() => {
-        router.push('/')
-      }, 1500)
-    } catch (error: any) {
-      console.error(error)
-      setSubmitError(error.message || "Hindi ma-save ang transaction na ito. Paki-try ulit.")
+      const result = await createTransaction(payload as any)
+      if (result.success) {
+        setIsSuccess(true)
+        setTimeout(() => {
+          router.push('/')
+          router.refresh()
+        }, 1500)
+      } else {
+        setSubmitError(result.error || "Failed to save transaction. Please try again.")
+      }
+    } catch (err: any) {
+      setSubmitError(err.message || "An unexpected error occurred.")
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -189,8 +256,7 @@ export default function TransactionForm({
   const w1 = wallets.find(w => w.id === walletId)?.name.toLowerCase() || ''
   const w2 = wallets.find(w => w.id === exchangeWalletId)?.name.toLowerCase() || ''
   const isBankInvolved = [w1, w2].some(n => n.includes('gcash') || n.includes('maya') || n.includes('maribank'))
-  const isLoadInvolved = [w1, w2].some(n => n.includes('load'))
-  const isFeeApplicable = isBankInvolved || isLoadInvolved
+  const isFeeApplicable = isBankInvolved
   const activeBrand = selectedWalletName 
     ? getWalletBrand(selectedWalletName) 
     : { solidBg: 'bg-zinc-900', shadow: 'shadow-zinc-900/30', bg: 'bg-zinc-100', color: 'text-zinc-500' }
@@ -246,7 +312,7 @@ export default function TransactionForm({
             <div className="flex justify-between items-center border-b border-zinc-50 pb-4">
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Type</span>
               <span className="text-xl font-black text-zinc-900">
-                {direction === 'IN' ? 'Money IN' : 'Money OUT'}
+                {direction === 'IN' ? 'CASH OUT (Receive)' : 'CASH IN (Send)'}
                 {isBorrowed && ' (Borrowed)'}
                 {isCustomerDebt && ' (Customer Debt)'}
                 {isExpense && ' (Expense)'}
@@ -340,7 +406,7 @@ export default function TransactionForm({
 
   // STEP 1
   return (
-    <form onSubmit={handleNextClick} className="flex flex-col min-h-screen relative">
+    <form onSubmit={handleNext} className="flex flex-col min-h-[100dvh] bg-zinc-50">
       <header className={`${activeBrand.solidBg} text-white px-5 pt-8 pb-10 shadow-md rounded-b-[2rem] relative z-10 transition-colors duration-300`}>
         <div className="flex items-center mb-6">
           <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
@@ -397,14 +463,17 @@ export default function TransactionForm({
               setIsCustomerDebt(false)
               setIsExpense(false)
             }}
-            className={`flex-1 py-4 rounded-[1.25rem] flex items-center justify-center gap-2 font-bold transition-all ${
+            className={`flex-1 py-3 px-2 rounded-[1.25rem] flex items-center justify-center gap-2 font-bold transition-all ${
               direction === 'IN' 
                 ? 'bg-green-100 text-green-700 shadow-sm' 
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
             }`}
           >
-            <ArrowDownRight size={22} strokeWidth={3} />
-            Money IN
+            <ArrowDownRight size={22} strokeWidth={3} className="shrink-0" />
+            <div className="flex flex-col items-start text-left leading-tight">
+              <span className="text-[15px]">CASH OUT</span>
+              <span className="text-[11px] opacity-80 font-medium">(Receive)</span>
+            </div>
           </button>
           <button
             type="button"
@@ -412,14 +481,17 @@ export default function TransactionForm({
               setDirection('OUT')
               setIsBorrowed(false)
             }}
-            className={`flex-1 py-4 rounded-[1.25rem] flex items-center justify-center gap-2 font-bold transition-all ${
+            className={`flex-1 py-3 px-2 rounded-[1.25rem] flex items-center justify-center gap-2 font-bold transition-all ${
               direction === 'OUT' 
                 ? 'bg-blue-100 text-blue-700 shadow-sm' 
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
             }`}
           >
-            <ArrowUpRight size={22} strokeWidth={3} />
-            Money OUT
+            <ArrowUpRight size={22} strokeWidth={3} className="shrink-0" />
+            <div className="flex flex-col items-start text-left leading-tight">
+              <span className="text-[15px]">CASH IN</span>
+              <span className="text-[11px] opacity-80 font-medium">(Send)</span>
+            </div>
           </button>
         </section>
 
@@ -605,7 +677,129 @@ export default function TransactionForm({
 
           </div>
           
-          {exchangeWalletId && (
+          {exchangeWalletId && exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id && (
+            <div className="mt-4">
+              <label className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-2xl cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={showFundingDebt} 
+                  onChange={(e) => setShowFundingDebt(e.target.checked)}
+                  className="w-6 h-6 rounded text-red-600 focus:ring-red-500"
+                />
+                <span className="font-bold text-lg">
+                  {direction === 'OUT' 
+                    ? '+ Nanghiram Pampuno (Kulang Pondo)' 
+                    : '+ Nanghiram Pampuno (Kulang Cash)'}
+                </span>
+              </label>
+
+              {showFundingDebt && (
+                <div className="mt-2 p-4 bg-red-50 rounded-2xl border border-red-100 space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-red-700 uppercase tracking-widest mb-1">Magkano inutang?</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-red-700">₱</span>
+                      <input 
+                        type="text" 
+                        inputMode="decimal"
+                        value={fundingDebtAmount}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9.]/g, '')
+                          const parts = raw.split('.')
+                          let val = parts[0]
+                          if (parts.length > 1) val += '.' + parts.slice(1).join('')
+                          if (val) {
+                            const p = val.split('.')
+                            p[0] = parseInt(p[0]).toLocaleString('en-US')
+                            setFundingDebtAmount(p.join('.'))
+                          } else {
+                            setFundingDebtAmount('')
+                          }
+                        }}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-red-200 text-xl font-black focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-zinc-900"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Projected Balance Indicator */}
+                  <div className="bg-white p-4 rounded-xl border border-red-200 shadow-sm space-y-2">
+                    <div className="flex justify-between items-center text-sm font-bold">
+                      <span className="text-zinc-500">Current Balance ({deductedWallet?.name})</span>
+                      <span className="text-zinc-900">₱{deductedWalletBalance.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-red-600">
+                      <span>Total Needed</span>
+                      <span>-₱{deductedAmount.toLocaleString()}</span>
+                    </div>
+                    {rawFundingDebt > 0 && (
+                      <div className="flex justify-between items-center text-sm font-black text-green-600">
+                        <span>Borrowed Amount</span>
+                        <span>+₱{rawFundingDebt.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="h-px bg-zinc-200 my-2" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold uppercase tracking-widest text-zinc-500">Remaining</span>
+                      <span className={`text-xl font-black ${projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {projectedBalance < 0 ? '-' : ''}₱{Math.abs(projectedBalance).toLocaleString()}
+                      </span>
+                    </div>
+                    {projectedBalance < 0 && (
+                      <div className="text-xs font-bold text-red-500 mt-1 flex items-center gap-1">
+                        <AlertTriangle size={14} />
+                        Kulang pa ng ₱{Math.abs(projectedBalance).toLocaleString()}! Magne-negative ang wallet.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative z-40">
+                    <label className="block text-sm font-bold text-red-700 uppercase tracking-widest mb-1">Kanino?</label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400" size={20} />
+                      <input 
+                        ref={fundingContactRef}
+                        type="text" 
+                        value={fundingDebtContact}
+                        onChange={async (e) => {
+                          setFundingDebtContact(e.target.value)
+                          setShowFundingSuggestions(true)
+                          const results = await searchContacts(e.target.value)
+                          setFundingContactSuggestions(results || [])
+                        }}
+                        onFocus={async () => {
+                          setShowFundingSuggestions(true)
+                          const results = await searchContacts(fundingDebtContact)
+                          setFundingContactSuggestions(results || [])
+                        }}
+                        onBlur={() => setTimeout(() => setShowFundingSuggestions(false), 200)}
+                        className="w-full pl-12 pr-4 py-3 rounded-xl border border-red-200 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-zinc-900"
+                        placeholder="Pangalan (e.g. Joy)"
+                      />
+                      {showFundingSuggestions && fundingContactSuggestions.length > 0 && (
+                        <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-red-100 rounded-xl shadow-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                          {fundingContactSuggestions.map((c) => (
+                            <li 
+                              key={c.id}
+                              onMouseDown={() => {
+                                setFundingDebtContact(c.name)
+                                setShowFundingSuggestions(false)
+                              }}
+                              className="px-4 py-3 hover:bg-red-50 cursor-pointer text-lg font-medium text-zinc-700 border-b border-zinc-50 last:border-0 transition-colors"
+                            >
+                              {c.name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(exchangeWalletId || isCustomerDebt) && (
             <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
               
               {isFeeApplicable && (
@@ -626,7 +820,7 @@ export default function TransactionForm({
                 <div>
                   <div className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 text-center">Quick Fee (Discount)</div>
                   <div className="flex flex-wrap gap-2 justify-center">
-                    {(isLoadInvolved ? [0, 5, 10, 15, 20] : [0, 5, 10, 15, 20, 25, 30]).map(val => (
+                    {[0, 5, 10, 15, 20, 25, 30].map(val => (
                       <button
                         key={val}
                         type="button"
@@ -648,7 +842,7 @@ export default function TransactionForm({
                         <span className="text-2xl sm:text-3xl font-black">- ₱{amount || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-green-600 font-black">
-                        <span>To {wallets.find(w => w.id === exchangeWalletId)?.name}</span>
+                        <span>To {isCustomerDebt ? 'Customer Debt' : wallets.find(w => w.id === exchangeWalletId)?.name}</span>
                         <span className="text-3xl sm:text-4xl">+ ₱{Number(amount.replace(/,/g, '') || 0) + Number(exchangeFee || 0)}</span>
                       </div>
                     </>

@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
+import crypto from 'crypto'
 
 export type TransactionInput = {
   wallet_id: string
@@ -14,6 +15,8 @@ export type TransactionInput = {
   exchange_wallet_id?: string
   exchange_fee?: number
   is_personal_transfer?: boolean
+  funding_debt_amount?: number
+  funding_debt_contact?: string
 }
 
 export async function getTransaction(id: string) {
@@ -32,77 +35,82 @@ export async function getTransaction(id: string) {
 }
 
 export async function createTransaction(input: TransactionInput) {
-  if (!input.amount || isNaN(input.amount) || input.amount <= 0) {
-    throw new Error('Transaction amount must be greater than 0.')
-  }
+  try {
+    if (!input.amount || isNaN(input.amount) || input.amount <= 0) {
+      return { success: false, error: 'Transaction amount must be greater than 0.' }
+    }
 
-  // 1. Handle contact matching/creation if name is provided
-  let finalContactId = input.contact_id
+    // 1. Handle contact matching/creation if name is provided
+    let finalContactId = input.contact_id
 
-  if (!finalContactId && input.contact_name) {
-    const normalized = input.contact_name.trim().toLowerCase()
-    
-    // Try to find existing contact
-    const { data: existing } = await supabase
-      .from('contacts')
-      .select('id')
-      .eq('normalized_name', normalized)
-      .single()
-
-    if (existing) {
-      finalContactId = existing.id
-      // Update last_used_at
-      await supabase.from('contacts').update({ last_used_at: new Date().toISOString() }).eq('id', existing.id)
-    } else {
-      // Create new contact
-      const { data: newContact, error: createError } = await supabase
+    if (!finalContactId && input.contact_name) {
+      const normalized = input.contact_name.trim().toLowerCase()
+      
+      // Try to find existing contact
+      const { data: existing } = await supabase
         .from('contacts')
-        .insert({
-          name: input.contact_name.trim(),
-          normalized_name: normalized,
-          last_used_at: new Date().toISOString()
-        })
         .select('id')
+        .eq('normalized_name', normalized)
         .single()
-        
-      if (!createError && newContact) {
-        finalContactId = newContact.id
+
+      if (existing) {
+        finalContactId = existing.id
+        // Update last_used_at
+        await supabase.from('contacts').update({ last_used_at: new Date().toISOString() }).eq('id', existing.id)
+      } else {
+        // Create new contact
+        const { data: newContact, error: createError } = await supabase
+          .from('contacts')
+          .insert({
+            name: input.contact_name.trim(),
+            normalized_name: normalized,
+            last_used_at: new Date().toISOString()
+          })
+          .select('id')
+          .single()
+          
+        if (!createError && newContact) {
+          finalContactId = newContact.id
+        } else if (createError) {
+          return { success: false, error: 'Failed to create contact: ' + createError.message }
+        }
       }
     }
-  }
 
-  // Generate transfer group ID if this is an exchange
-  let transferGroupId = undefined
-  if (input.exchange_wallet_id) {
-    transferGroupId = crypto.randomUUID()
-  }
+    // Generate transfer group ID if this is an exchange
+    let transferGroupId = undefined
+    if (input.exchange_wallet_id) {
+      transferGroupId = crypto.randomUUID()
+    }
 
-  // 2. Create the main transaction
-  const { data: tx, error: txError } = await supabase
-    .from('transactions')
-    .insert({
-      wallet_id: input.wallet_id,
-      contact_id: finalContactId || null,
-      amount: input.amount,
-      direction: input.direction,
-      kind: input.exchange_wallet_id ? 'TRANSFER' : input.kind,
-      note: input.note || null,
-      transfer_group_id: transferGroupId
-    })
-    .select('id')
-    .single()
+    // 2. Create the main transaction
+    const { data: tx, error: txError } = await supabase
+      .from('transactions')
+      .insert({
+        wallet_id: input.wallet_id,
+        contact_id: finalContactId || null,
+        amount: input.amount,
+        direction: input.direction,
+        kind: input.exchange_wallet_id ? 'TRANSFER' : input.kind,
+        note: input.note || null,
+        transfer_group_id: transferGroupId
+      })
+      .select('id')
+      .single()
 
-  if (txError) {
-    console.error('Error creating transaction:', txError)
-    throw new Error('Could not save transaction')
-  }
+    if (txError) {
+      console.error('Error creating transaction:', txError)
+      return { success: false, error: 'Could not save transaction: ' + txError.message }
+    }
 
   // 3. If Borrowed or Lent, create obligation
   if ((input.kind === 'BORROWED' || input.kind === 'LENT') && finalContactId && tx) {
+    // For Customer Debts (LENT), the customer owes the principal + the fee.
+    const obligationAmount = input.kind === 'LENT' ? input.amount + (input.exchange_fee || 0) : input.amount
     await supabase.from('obligations').insert({
       contact_id: finalContactId,
       origin_transaction_id: tx.id,
-      original_amount: input.amount,
+      original_amount: obligationAmount,
       status: 'open'
     })
   }
@@ -113,55 +121,77 @@ export async function createTransaction(input: TransactionInput) {
     let exchangeAmount = input.amount
     let exchangeDirection = 'IN'
     
-    if (input.is_personal_transfer) {
-      // Personal Transfer: Base amounts match exactly. The fee is an EXPENSE.
-      exchangeDirection = input.direction === 'IN' ? 'OUT' : 'IN'
-      
-      // Create the matching exchange
+    // Customer Transfer: The fee is applied directly to the exchange wallet amount.
+    if (input.direction === 'IN') {
+      exchangeDirection = 'OUT'
+      exchangeAmount = input.amount - fee
+    } else {
+      exchangeDirection = 'IN'
+      exchangeAmount = input.amount + fee
+    }
+
+    if (exchangeAmount > 0) {
       await supabase.from('transactions').insert({
         wallet_id: input.exchange_wallet_id,
         contact_id: finalContactId || null,
-        amount: input.amount,
+        amount: exchangeAmount,
         direction: exchangeDirection,
         kind: 'TRANSFER',
-        note: input.note || 'Personal Transfer',
+        note: `Exchange / Transfer Fee: ₱${fee}`,
         transfer_group_id: transferGroupId
       })
+    }
+  }
 
-      // Create a 3rd transaction for the fee as an EXPENSE
-      if (fee > 0) {
-        // If money went OUT (e.g. GCash -> Cash), the fee was charged to the Source (GCash).
-        // If money came IN (e.g. Cash -> GCash), the fee was charged to the Exchange Wallet (Cash).
-        const feeWalletId = input.direction === 'OUT' ? input.wallet_id : input.exchange_wallet_id
-        
-        await supabase.from('transactions').insert({
-          wallet_id: feeWalletId,
-          amount: fee,
-          direction: 'OUT',
-          kind: 'EXPENSE',
-          note: 'Transfer Fee',
-          transfer_group_id: transferGroupId
-        })
-      }
+  // 5. Create Funding Debt if applicable (Nanghiram Pampuno)
+  if (input.funding_debt_amount && input.funding_debt_amount > 0 && input.funding_debt_contact && input.exchange_wallet_id && transferGroupId) {
+    // 5a. Ensure funding contact exists
+    let fundingContactId = null
+    const { data: existingFundingContact } = await supabase
+      .from('contacts')
+      .select('id')
+      .ilike('name', input.funding_debt_contact)
+      .single()
+
+    if (existingFundingContact) {
+      fundingContactId = existingFundingContact.id
     } else {
-      // Customer Transfer: The fee is applied directly to the exchange wallet amount.
-      if (input.direction === 'IN') {
-        exchangeDirection = 'OUT'
-        exchangeAmount = input.amount - fee
-      } else {
-        exchangeDirection = 'IN'
-        exchangeAmount = input.amount + fee
+      const { data: newFundingContact, error: insertFundingError } = await supabase
+        .from('contacts')
+        .insert({ name: input.funding_debt_contact })
+        .select('id')
+        .single()
+      if (!insertFundingError && newFundingContact) {
+        fundingContactId = newFundingContact.id
       }
+    }
 
-      if (exchangeAmount > 0) {
-        await supabase.from('transactions').insert({
-          wallet_id: input.exchange_wallet_id,
-          contact_id: finalContactId || null,
-          amount: exchangeAmount,
-          direction: exchangeDirection,
-          kind: 'TRANSFER',
-          note: `Exchange / Transfer Fee: ₱${fee}`,
-          transfer_group_id: transferGroupId
+    // 5b. The borrowed funds always go INTO the wallet that is decreasing in the exchange
+    const targetFundingWalletId = input.direction === 'IN' ? input.exchange_wallet_id : input.wallet_id
+
+    if (fundingContactId && targetFundingWalletId) {
+      // Create the Borrowed transaction
+      const { data: fundingTx } = await supabase
+        .from('transactions')
+        .insert({
+          wallet_id: targetFundingWalletId,
+          contact_id: fundingContactId,
+          amount: input.funding_debt_amount,
+          direction: 'IN', // Borrowing money is money IN to the agent
+          kind: 'BORROWED',
+          note: 'Funding for exchange',
+          transfer_group_id: transferGroupId // Group it with the exchange!
+        })
+        .select('id')
+        .single()
+
+      if (fundingTx) {
+        // Create the Obligation for the borrowed funds
+        await supabase.from('obligations').insert({
+          contact_id: fundingContactId,
+          origin_transaction_id: fundingTx.id,
+          original_amount: input.funding_debt_amount,
+          status: 'open'
         })
       }
     }
@@ -170,6 +200,11 @@ export async function createTransaction(input: TransactionInput) {
   revalidatePath('/')
   revalidatePath('/wallets/[slug]', 'page')
   return { success: true, transactionId: tx.id }
+
+  } catch (error: any) {
+    console.error('Unhandled error in createTransaction:', error)
+    return { success: false, error: 'Internal Server Error: ' + error.message }
+  }
 }
 
 export async function getRecentTransactions(limit = 5, walletId?: string) {

@@ -65,7 +65,8 @@ export async function getTopContacts(limit: number = 3) {
       id,
       transfer_group_id,
       contact_id,
-      contact:contacts(id, name)
+      contact:contacts(id, name),
+      wallet:wallets(name)
     `)
     .not('contact_id', 'is', null)
     .neq('status', 'voided')
@@ -78,6 +79,10 @@ export async function getTopContacts(limit: number = 3) {
   const processedGroups = new Set<string>()
 
   data.forEach((tx: any) => {
+    // Filter out auto-supply transactions from "Suki"
+    const walletName = tx.wallet && !Array.isArray(tx.wallet) ? tx.wallet.name : ''
+    if (walletName.toLowerCase().includes('auto-supply')) return
+
     if (tx.contact) {
       // Handle Supabase relation typing (sometimes array, sometimes object)
       const c = Array.isArray(tx.contact) ? tx.contact[0] : tx.contact
