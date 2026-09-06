@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getActiveDebtsGrouped } from '@/actions/obligation'
-import { getWallets } from '@/actions/wallet'
+import { getWallets, WalletWithBalance } from '@/actions/wallet'
 import { notFound } from 'next/navigation'
 import RepaymentForm from './RepaymentForm'
 
@@ -27,7 +27,7 @@ export default async function RepaymentPage({
   if (!target) return notFound()
   
   const wallets = await getWallets()
-  const activeWallets = wallets.filter(w => w.is_active).sort((a, b) => a.sort_order - b.sort_order)
+  const activeWallets = wallets.filter(w => w.is_active).sort((a, b) => a.sort_order - b.sort_order) as WalletWithBalance[]
 
   return (
     <main className="flex flex-col min-h-screen bg-zinc-50 relative pb-24">

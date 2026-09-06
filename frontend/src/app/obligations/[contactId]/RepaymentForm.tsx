@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { repayObligation } from '@/actions/repayment'
-import { Wallet } from '@/actions/wallet'
-import { Landmark, Smartphone, Wallet as WalletIcon, Loader2, Check } from 'lucide-react'
+import { WalletWithBalance } from '@/actions/wallet'
+import { Loader2, Check, AlertTriangle } from 'lucide-react'
 
 // Wallet Brand Utility
 const getWalletBrand = (name: string) => {
@@ -11,9 +11,7 @@ const getWalletBrand = (name: string) => {
   if (lower.includes('gcash')) return { color: 'text-blue-600', bg: 'bg-blue-100', peer: 'peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600' };
   if (lower.includes('maya')) return { color: 'text-green-600', bg: 'bg-green-100', peer: 'peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600' };
   if (lower.includes('maribank')) return { color: 'text-orange-500', bg: 'bg-orange-100', peer: 'peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500' };
-  if (lower.includes('cash')) return { color: 'text-emerald-600', bg: 'bg-emerald-100', peer: 'peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600' };
-  if (lower.includes('auto-supply')) return { color: 'text-zinc-600', bg: 'bg-zinc-200', peer: 'peer-checked:bg-zinc-700 peer-checked:text-white peer-checked:border-zinc-700' };
-  if (lower.includes('load')) return { color: 'text-purple-600', bg: 'bg-purple-100', peer: 'peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600' };
+  if (lower.includes('cash')) return { color: 'text-amber-600', bg: 'bg-amber-100', peer: 'peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600' };
   return { color: 'text-zinc-500', bg: 'bg-zinc-100', peer: 'peer-checked:bg-zinc-600 peer-checked:text-white peer-checked:border-zinc-600' };
 };
 
@@ -25,7 +23,7 @@ export default function RepaymentForm({
 }: { 
   contactId: string, 
   maxAmount: number, 
-  wallets: Wallet[],
+  wallets: WalletWithBalance[],
   isLent: boolean
 }) {
   const [amount, setAmount] = useState<string>('')
@@ -33,17 +31,30 @@ export default function RepaymentForm({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  const rawAmount = Number(amount.replace(/,/g, '') || 0)
+  const selectedWallet = wallets.find(w => w.id === walletId)
+  const walletBalance = selectedWallet?.expected_balance ?? 0
+
+  // For repaying (BORROWED): money goes OUT of our wallet.
+  // For collecting (LENT): money comes IN, no balance check needed.
+  const willDeductFromWallet = !isLent
+  const projectedBalance = willDeductFromWallet ? walletBalance - rawAmount : walletBalance + rawAmount
+  const isInsufficient = willDeductFromWallet && rawAmount > 0 && projectedBalance < 0
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     
-    const numAmount = Number(amount.replace(/,/g, ''))
-    if (!numAmount || numAmount <= 0) {
+    if (!rawAmount || rawAmount <= 0) {
       setError('Please enter a valid amount.')
       return
     }
-    if (numAmount > maxAmount) {
+    if (rawAmount > maxAmount) {
       setError(`Amount cannot be more than the owed ₱${maxAmount.toLocaleString()}`)
+      return
+    }
+    if (isInsufficient) {
+      setError(`Hindi sapat ang ${selectedWallet?.name}! Laman: ₱${walletBalance.toLocaleString()}. Pumili ng ibang wallet.`)
       return
     }
 
@@ -117,24 +128,40 @@ export default function RepaymentForm({
         <div className="flex flex-col gap-3">
           {wallets.map(w => {
             const Brand = getWalletBrand(w.name)
+            const isSelected = walletId === w.id
+            const willDeduct = !isLent
+            const projected = willDeduct ? w.expected_balance - rawAmount : w.expected_balance + rawAmount
+            const wouldGoNegative = willDeduct && rawAmount > 0 && projected < 0
+
             return (
               <label key={w.id} className="relative cursor-pointer group active:scale-[0.98] transition-transform">
                 <input 
                   type="radio" 
                   name="walletId" 
                   value={w.id} 
-                  checked={walletId === w.id}
+                  checked={isSelected}
                   onChange={() => setWalletId(w.id)}
                   className="peer sr-only" 
                 />
-                <div className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 border-zinc-200 bg-white text-zinc-500 transition-all ${Brand.peer}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="font-bold text-lg uppercase tracking-wide group-hover:text-zinc-700 peer-checked:text-white transition-colors">{w.name}</div>
+                <div className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${wouldGoNegative && isSelected ? 'border-red-400 bg-red-50 text-red-700' : `border-zinc-200 bg-white text-zinc-500 ${Brand.peer}`}`}>
+                  <div className="flex flex-col">
+                    <div className="font-bold text-lg uppercase tracking-wide">{w.name}</div>
+                    <div className={`text-sm font-bold mt-0.5 ${wouldGoNegative ? 'text-red-500' : isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
+                      Balance: ₱{w.expected_balance.toLocaleString()}
+                      {isSelected && rawAmount > 0 && (
+                        <span className={`ml-2 ${wouldGoNegative ? 'text-red-600 font-black' : 'text-white/80'}`}>
+                          → ₱{Math.abs(projected).toLocaleString()}{wouldGoNegative ? ' ⚠️ Kulang!' : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {walletId === w.id && (
+                  {isSelected && !wouldGoNegative && (
                     <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center shrink-0">
                       <Check size={16} strokeWidth={4} />
                     </div>
+                  )}
+                  {wouldGoNegative && isSelected && (
+                    <AlertTriangle size={22} className="text-red-500 shrink-0" />
                   )}
                 </div>
               </label>
@@ -142,6 +169,19 @@ export default function RepaymentForm({
           })}
         </div>
       </div>
+
+      {/* Balance warning */}
+      {isInsufficient && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex gap-3 items-start">
+          <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <div className="text-red-700 font-black text-sm">Hindi Sapat ang {selectedWallet?.name}!</div>
+            <div className="text-red-600 font-bold text-sm mt-0.5">
+              Kulang ng ₱{Math.abs(projectedBalance).toLocaleString()}. Pumili ng ibang wallet na may sapat na laman.
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 rounded-xl bg-red-50 text-red-600 font-bold border border-red-200">
@@ -152,7 +192,7 @@ export default function RepaymentForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || isInsufficient}
         className={`w-full text-white rounded-2xl py-5 text-xl font-black uppercase tracking-widest active:scale-[0.98] transition-transform flex items-center justify-center disabled:opacity-70 ${isLent ? 'bg-orange-500' : 'bg-zinc-900'}`}
       >
         {isPending ? (
