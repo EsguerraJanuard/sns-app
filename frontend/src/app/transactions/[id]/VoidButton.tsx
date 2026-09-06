@@ -29,7 +29,7 @@ export default function VoidButton({
     setLoading(true)
     try {
       await voidTransaction(transactionId)
-      router.push('/transactions')
+      router.push('/')
       router.refresh()
     } catch (e) {
       console.error(e)
