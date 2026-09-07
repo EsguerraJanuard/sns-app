@@ -219,6 +219,12 @@ export default async function DashboardPage() {
                           <span className={wBrand.color}>{tx.wallet?.name || 'Unknown'}</span>
                           <span>•</span>
                           <span>{dateStr}</span>
+                          {tx.fundingCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-orange-500 font-black">{tx.fundingCount} Pampuno</span>
+                            </>
+                          )}
                           {tx.kind === 'BORROWED' && (
                             <>
                               <span>•</span>

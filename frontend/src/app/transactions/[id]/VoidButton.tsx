@@ -28,9 +28,15 @@ export default function VoidButton({
   const handleVoid = async () => {
     setLoading(true)
     try {
-      await voidTransaction(transactionId)
-      router.push('/')
-      router.refresh()
+      const result = await voidTransaction(transactionId)
+      if (result?.success) {
+        router.push('/')
+        router.refresh()
+      } else {
+        alert(result?.error || 'Failed to delete transaction. Please try again.')
+        setLoading(false)
+        setShowModal(false)
+      }
     } catch (e) {
       console.error(e)
       alert('Failed to delete transaction. Please try again.')

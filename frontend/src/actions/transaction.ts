@@ -379,6 +379,7 @@ export async function searchTransactions(params: {
       contact:contacts(name)
     `)
     .eq('status', 'active')
+    .or('note.neq.Funded transaction,note.is.null')
     .order('occurred_at', { ascending: false })
 
   if (params.walletId) {
@@ -412,102 +413,133 @@ export async function searchTransactions(params: {
     })
   }
 
-  return results
+  return await attachFundingInfo(results)
 }
 
 export async function voidTransaction(id: string) {
-  const { data: tx, error } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const { data: tx, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  if (error || !tx) {
-    throw new Error('Transaction not found')
-  }
-
-  // 1. Grouping logic: find all transactions related to this operation
-  const groupId = tx.transfer_group_id || tx.id;
-
-  const { data: relatedTxs } = await supabase
-    .from('transactions')
-    .select('id, kind, transfer_group_id')
-    .or(`id.eq.${id},transfer_group_id.eq.${groupId}`)
-
-  if (!relatedTxs || relatedTxs.length === 0) return { success: false, error: 'No transactions found' }
-
-  const txIdsToVoid = relatedTxs.map(t => t.id)
-
-  // 2. Void all related transactions atomically
-  await supabase
-    .from('transactions')
-    .update({ status: 'voided' })
-    .in('id', txIdsToVoid)
-
-  // 3. Cascading void for BORROWED / LENT
-  const borrowedOrLentIds = relatedTxs.filter(t => t.kind === 'BORROWED' || t.kind === 'LENT').map(t => t.id)
-  
-  if (borrowedOrLentIds.length > 0) {
-    const { data: obs } = await supabase
-      .from('obligations')
-      .select('id')
-      .in('origin_transaction_id', borrowedOrLentIds)
-
-    if (obs && obs.length > 0) {
-      const obIds = obs.map(o => o.id)
-      
-      const { data: reps } = await supabase
-        .from('obligation_repayments')
-        .select('transaction_id')
-        .in('obligation_id', obIds)
-        
-      if (reps && reps.length > 0) {
-        const repTxIds = reps.map(r => r.transaction_id)
-        
-        await supabase
-          .from('transactions')
-          .update({ status: 'voided' })
-          .in('id', repTxIds)
-          
-        await supabase
-          .from('obligation_repayments')
-          .delete()
-          .in('obligation_id', obIds)
-      }
-      
-      await supabase
-        .from('obligations')
-        .update({ status: 'voided' })
-        .in('id', obIds)
+    if (error || !tx) {
+      return { success: false, error: 'Transaction not found' }
     }
-  }
 
-  // 4. Cascading fix for REPAYMENTS
-  const repaymentIds = relatedTxs.filter(t => t.kind === 'REPAYMENT').map(t => t.id)
-  if (repaymentIds.length > 0) {
-    for (const repId of repaymentIds) {
-      const { data: reps } = await supabase
-        .from('obligation_repayments')
-        .select('obligation_id')
-        .eq('transaction_id', repId)
-        
-      if (reps && reps.length > 0) {
-        const obIds = reps.map(r => r.obligation_id)
-        
-        await supabase
+    // 1. Grouping logic: find all transactions related to this operation
+    //    - If tx has a transfer_group_id, find all siblings in that group
+    //    - Also find any funding transactions that used this tx's id OR group as their transfer_group_id
+    const groupId = tx.transfer_group_id;
+
+    // Build the OR filter to capture:
+    //   a) The clicked transaction itself
+    //   b) All transactions sharing the same transfer_group_id (transfer pairs, funding debts)
+    //   c) Any funding transactions whose transfer_group_id points to THIS transaction's id
+    const orConditions = [`id.eq.${id}`]
+    if (groupId) {
+      orConditions.push(`transfer_group_id.eq.${groupId}`)
+    }
+    // Funding debts for non-transfer transactions use the main tx.id as their transfer_group_id
+    orConditions.push(`transfer_group_id.eq.${tx.id}`)
+
+    const { data: relatedTxs } = await supabase
+      .from('transactions')
+      .select('id, kind, transfer_group_id')
+      .or(orConditions.join(','))
+
+    if (!relatedTxs || relatedTxs.length === 0) {
+      return { success: false, error: 'No transactions found' }
+    }
+
+    const txIdsToVoid = relatedTxs.map(t => t.id)
+
+    // 2. Void all related transactions atomically
+    const { error: voidError } = await supabase
+      .from('transactions')
+      .update({ status: 'voided' })
+      .in('id', txIdsToVoid)
+
+    if (voidError) {
+      return { success: false, error: 'Failed to void transactions: ' + voidError.message }
+    }
+
+    // 3. Cascading void for BORROWED / LENT obligations
+    const borrowedOrLentIds = relatedTxs
+      .filter(t => t.kind === 'BORROWED' || t.kind === 'LENT')
+      .map(t => t.id)
+
+    if (borrowedOrLentIds.length > 0) {
+      const { data: obs } = await supabase
+        .from('obligations')
+        .select('id')
+        .in('origin_transaction_id', borrowedOrLentIds)
+
+      if (obs && obs.length > 0) {
+        const obIds = obs.map(o => o.id)
+
+        // Find and void repayment transactions tied to these obligations
+        const { data: reps } = await supabase
           .from('obligation_repayments')
-          .delete()
-          .eq('transaction_id', repId)
-          
+          .select('transaction_id')
+          .in('obligation_id', obIds)
+
+        if (reps && reps.length > 0) {
+          const repTxIds = reps.map(r => r.transaction_id)
+
+          await supabase
+            .from('transactions')
+            .update({ status: 'voided' })
+            .in('id', repTxIds)
+
+          await supabase
+            .from('obligation_repayments')
+            .delete()
+            .in('obligation_id', obIds)
+        }
+
+        // Void the obligations themselves
         await supabase
           .from('obligations')
-          .update({ status: 'open', settled_at: null })
+          .update({ status: 'voided' })
           .in('id', obIds)
       }
     }
-  }
 
-  revalidatePath('/', 'layout')
-  revalidatePath('/transactions', 'layout')
-  return { success: true }
+    // 4. Cascading fix for REPAYMENT transactions — re-open their obligations
+    const repaymentIds = relatedTxs
+      .filter(t => t.kind === 'REPAYMENT')
+      .map(t => t.id)
+
+    if (repaymentIds.length > 0) {
+      for (const repId of repaymentIds) {
+        const { data: reps } = await supabase
+          .from('obligation_repayments')
+          .select('obligation_id')
+          .eq('transaction_id', repId)
+
+        if (reps && reps.length > 0) {
+          const obIds = reps.map(r => r.obligation_id)
+
+          await supabase
+            .from('obligation_repayments')
+            .delete()
+            .eq('transaction_id', repId)
+
+          await supabase
+            .from('obligations')
+            .update({ status: 'open', settled_at: null })
+            .in('id', obIds)
+        }
+      }
+    }
+
+    revalidatePath('/', 'layout')
+    revalidatePath('/transactions', 'layout')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Unhandled error in voidTransaction:', err)
+    return { success: false, error: 'Failed to delete transaction. Please try again.' }
+  }
 }
