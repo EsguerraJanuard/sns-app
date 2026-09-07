@@ -15,8 +15,7 @@ export type TransactionInput = {
   exchange_wallet_id?: string
   exchange_fee?: number
   is_personal_transfer?: boolean
-  funding_debt_amount?: number
-  funding_debt_contact?: string
+  funding_debts?: { contact_name: string, amount: number }[]
 }
 
 export async function getTransaction(id: string) {
@@ -144,55 +143,55 @@ export async function createTransaction(input: TransactionInput) {
   }
 
   // 5. Create Funding Debt if applicable (Nanghiram Pampuno)
-  if (input.funding_debt_amount && input.funding_debt_amount > 0 && input.funding_debt_contact && input.exchange_wallet_id && transferGroupId) {
-    // 5a. Ensure funding contact exists
-    let fundingContactId = null
-    const { data: existingFundingContact } = await supabase
-      .from('contacts')
-      .select('id')
-      .ilike('name', input.funding_debt_contact)
-      .single()
+  // 5. Create Borrowed funding transactions (Multiple Lenders Support)
+  if (input.funding_debts && input.funding_debts.length > 0) {
+    for (const debt of input.funding_debts) {
+      if (debt.amount > 0 && debt.contact_name) {
+        let fundingContactId = null
+        const { data: existingFundingContact } = await supabase.from('contacts').select('id').ilike('name', debt.contact_name).single()
+        
+        if (existingFundingContact) {
+          fundingContactId = existingFundingContact.id
+        } else {
+          const { data: newFundingContact, error: insertFundingError } = await supabase
+            .from('contacts')
+            .insert({ name: debt.contact_name })
+            .select('id')
+            .single()
+          if (!insertFundingError && newFundingContact) {
+            fundingContactId = newFundingContact.id
+          }
+        }
 
-    if (existingFundingContact) {
-      fundingContactId = existingFundingContact.id
-    } else {
-      const { data: newFundingContact, error: insertFundingError } = await supabase
-        .from('contacts')
-        .insert({ name: input.funding_debt_contact })
-        .select('id')
-        .single()
-      if (!insertFundingError && newFundingContact) {
-        fundingContactId = newFundingContact.id
-      }
-    }
+        // Default to the main wallet if no exchange wallet
+        const targetFundingWalletId = input.direction === 'IN' 
+          ? (input.exchange_wallet_id || input.wallet_id) 
+          : input.wallet_id;
 
-    // 5b. The borrowed funds always go INTO the wallet that is decreasing in the exchange
-    const targetFundingWalletId = input.direction === 'IN' ? input.exchange_wallet_id : input.wallet_id
+        if (fundingContactId && targetFundingWalletId) {
+          const { data: fundingTx } = await supabase
+            .from('transactions')
+            .insert({
+              wallet_id: targetFundingWalletId,
+              contact_id: fundingContactId,
+              amount: debt.amount,
+              direction: 'IN', // Borrowing money is money IN to the agent
+              kind: 'BORROWED',
+              note: 'Funded transaction',
+              transfer_group_id: transferGroupId || tx.id // link to exchange group OR the main tx id
+            })
+            .select('id')
+            .single()
 
-    if (fundingContactId && targetFundingWalletId) {
-      // Create the Borrowed transaction
-      const { data: fundingTx } = await supabase
-        .from('transactions')
-        .insert({
-          wallet_id: targetFundingWalletId,
-          contact_id: fundingContactId,
-          amount: input.funding_debt_amount,
-          direction: 'IN', // Borrowing money is money IN to the agent
-          kind: 'BORROWED',
-          note: 'Funding for exchange',
-          transfer_group_id: transferGroupId // Group it with the exchange!
-        })
-        .select('id')
-        .single()
-
-      if (fundingTx) {
-        // Create the Obligation for the borrowed funds
-        await supabase.from('obligations').insert({
-          contact_id: fundingContactId,
-          origin_transaction_id: fundingTx.id,
-          original_amount: input.funding_debt_amount,
-          status: 'open'
-        })
+          if (fundingTx) {
+            await supabase.from('obligations').insert({
+              contact_id: fundingContactId,
+              origin_transaction_id: fundingTx.id,
+              original_amount: debt.amount,
+              status: 'open'
+            })
+          }
+        }
       }
     }
   }
@@ -207,6 +206,49 @@ export async function createTransaction(input: TransactionInput) {
   }
 }
 
+
+async function attachFundingInfo(primaryTxs: any[]) {
+  if (!primaryTxs || primaryTxs.length === 0) return primaryTxs;
+
+  const groupIds = primaryTxs.map(tx => tx.transfer_group_id).filter(Boolean);
+  const txIds = primaryTxs.map(tx => tx.id);
+
+  let fundingQuery = supabase
+    .from('transactions')
+    .select('id, transfer_group_id, amount')
+    .eq('status', 'active')
+    .eq('note', 'Funded transaction');
+  
+  if (groupIds.length > 0) {
+    fundingQuery = fundingQuery.or(`transfer_group_id.in.(${groupIds.join(',')}),transfer_group_id.in.(${txIds.join(',')})`);
+  } else if (txIds.length > 0) {
+    fundingQuery = fundingQuery.in('transfer_group_id', txIds);
+  } else {
+    return primaryTxs;
+  }
+
+  const { data: fundingTxs } = await fundingQuery;
+
+  if (fundingTxs && fundingTxs.length > 0) {
+    return primaryTxs.map(tx => {
+      if (tx.kind === 'TRANSFER' && tx.direction !== 'IN') {
+        return tx;
+      }
+      const relatedFunding = fundingTxs.filter(f => f.transfer_group_id === tx.transfer_group_id || f.transfer_group_id === tx.id);
+      if (relatedFunding.length > 0) {
+        return {
+          ...tx,
+          fundingCount: relatedFunding.length,
+          fundingTotal: relatedFunding.reduce((sum, f) => sum + f.amount, 0)
+        };
+      }
+      return tx;
+    });
+  }
+
+  return primaryTxs;
+}
+
 export async function getRecentTransactions(limit = 5, walletId?: string) {
   let query = supabase
     .from('transactions')
@@ -216,6 +258,7 @@ export async function getRecentTransactions(limit = 5, walletId?: string) {
       contact:contacts(name)
     `)
     .eq('status', 'active')
+    .or('note.neq.Funded transaction,note.is.null')
     .order('occurred_at', { ascending: false })
     .limit(limit)
 
@@ -230,7 +273,7 @@ export async function getRecentTransactions(limit = 5, walletId?: string) {
     return []
   }
 
-  return data
+  return await attachFundingInfo(data)
 }
 
 export async function getTodaySummary() {
@@ -383,76 +426,79 @@ export async function voidTransaction(id: string) {
     throw new Error('Transaction not found')
   }
 
-  // 1. If it is a TRANSFER, void all transactions in the same transfer_group_id
-  if ((tx.kind === 'TRANSFER' || tx.exchange_wallet_id) && tx.transfer_group_id) {
-    await supabase
-      .from('transactions')
-      .update({ status: 'voided' })
-      .eq('transfer_group_id', tx.transfer_group_id)
-  } 
-  else {
-    // 2. Void the single transaction
-    await supabase
-      .from('transactions')
-      .update({ status: 'voided' })
-      .eq('id', id)
+  // 1. Grouping logic: find all transactions related to this operation
+  const groupId = tx.transfer_group_id || tx.id;
 
-    // 3. Cascading void for BORROWED / LENT
-    if (tx.kind === 'BORROWED' || tx.kind === 'LENT') {
-      // Find the obligation
-      const { data: ob } = await supabase
-        .from('obligations')
-        .select('id')
-        .eq('origin_transaction_id', id)
-        .single()
-        
-      if (ob) {
-        // Find all repayments for this obligation
-        const { data: reps } = await supabase
-          .from('obligation_repayments')
-          .select('transaction_id')
-          .eq('obligation_id', ob.id)
-          
-        if (reps && reps.length > 0) {
-          const repTxIds = reps.map(r => r.transaction_id)
-          // Void the repayment transactions
-          await supabase
-            .from('transactions')
-            .update({ status: 'voided' })
-            .in('id', repTxIds)
-            
-          // Delete the linking records
-          await supabase
-            .from('obligation_repayments')
-            .delete()
-            .eq('obligation_id', ob.id)
-        }
-        
-        // Void the obligation itself
-        await supabase
-          .from('obligations')
-          .update({ status: 'voided' })
-          .eq('id', ob.id)
-      }
-    }
+  const { data: relatedTxs } = await supabase
+    .from('transactions')
+    .select('id, kind, transfer_group_id')
+    .or(`id.eq.${id},transfer_group_id.eq.${groupId}`)
 
-    // 4. Cascading fix for REPAYMENTS
-    if (tx.kind === 'REPAYMENT') {
+  if (!relatedTxs || relatedTxs.length === 0) return { success: false, error: 'No transactions found' }
+
+  const txIdsToVoid = relatedTxs.map(t => t.id)
+
+  // 2. Void all related transactions atomically
+  await supabase
+    .from('transactions')
+    .update({ status: 'voided' })
+    .in('id', txIdsToVoid)
+
+  // 3. Cascading void for BORROWED / LENT
+  const borrowedOrLentIds = relatedTxs.filter(t => t.kind === 'BORROWED' || t.kind === 'LENT').map(t => t.id)
+  
+  if (borrowedOrLentIds.length > 0) {
+    const { data: obs } = await supabase
+      .from('obligations')
+      .select('id')
+      .in('origin_transaction_id', borrowedOrLentIds)
+
+    if (obs && obs.length > 0) {
+      const obIds = obs.map(o => o.id)
+      
       const { data: reps } = await supabase
         .from('obligation_repayments')
-        .select('obligation_id')
-        .eq('transaction_id', id)
-      
-      if (reps && reps.length > 0) {
-        const obIds = reps.map(r => r.obligation_id)
+        .select('transaction_id')
+        .in('obligation_id', obIds)
         
-        // Delete the repayment records
+      if (reps && reps.length > 0) {
+        const repTxIds = reps.map(r => r.transaction_id)
+        
+        await supabase
+          .from('transactions')
+          .update({ status: 'voided' })
+          .in('id', repTxIds)
+          
         await supabase
           .from('obligation_repayments')
           .delete()
-          .eq('transaction_id', id)
+          .in('obligation_id', obIds)
+      }
+      
+      await supabase
+        .from('obligations')
+        .update({ status: 'voided' })
+        .in('id', obIds)
+    }
+  }
+
+  // 4. Cascading fix for REPAYMENTS
+  const repaymentIds = relatedTxs.filter(t => t.kind === 'REPAYMENT').map(t => t.id)
+  if (repaymentIds.length > 0) {
+    for (const repId of repaymentIds) {
+      const { data: reps } = await supabase
+        .from('obligation_repayments')
+        .select('obligation_id')
+        .eq('transaction_id', repId)
+        
+      if (reps && reps.length > 0) {
+        const obIds = reps.map(r => r.obligation_id)
+        
+        await supabase
+          .from('obligation_repayments')
+          .delete()
+          .eq('transaction_id', repId)
           
-        // Re-open those obligations since they now have a balance again
         await supabase
           .from('obligations')
           .update({ status: 'open', settled_at: null })
@@ -462,5 +508,6 @@ export async function voidTransaction(id: string) {
   }
 
   revalidatePath('/', 'layout')
+  revalidatePath('/transactions', 'layout')
   return { success: true }
 }

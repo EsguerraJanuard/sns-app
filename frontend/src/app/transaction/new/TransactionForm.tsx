@@ -41,12 +41,7 @@ export default function TransactionForm({
   const [isCustomerDebt, setIsCustomerDebt] = useState(false) // For OUT
   const [isExpense, setIsExpense] = useState(false) // For OUT
 
-  const [fundingDebtAmount, setFundingDebtAmount] = useState('')
-  const [fundingDebtContact, setFundingDebtContact] = useState('')
-  const [showFundingDebt, setShowFundingDebt] = useState(false)
-  const fundingContactRef = useRef<HTMLInputElement>(null)
-  const [fundingContactSuggestions, setFundingContactSuggestions] = useState<any[]>([])
-  const [showFundingSuggestions, setShowFundingSuggestions] = useState(false)
+  const [fundingDebts, setFundingDebts] = useState<{ id: string, contactName: string, amount: string }[]>([])
   const [note, setNote] = useState('')
   
   const defaultExchangeId = wallets.find(w => w.slug === 'cash')?.id || ''
@@ -99,34 +94,6 @@ export default function TransactionForm({
     contactRef.current?.blur()
   }
 
-  const handleFundingContactSearch = async (val: string) => {
-    setFundingDebtContact(val)
-    if (val.length > 0) {
-      const { data } = await supabase
-        .from('contacts')
-        .select('*')
-        .ilike('name', `%${val}%`)
-        .order('last_transaction_at', { ascending: false })
-        .limit(3)
-      setFundingContactSuggestions(data || [])
-      setShowFundingSuggestions(true)
-    } else {
-      const { data } = await supabase
-        .from('contacts')
-        .select('*')
-        .order('last_transaction_at', { ascending: false })
-        .limit(3)
-      setFundingContactSuggestions(data || [])
-      setShowFundingSuggestions(true)
-    }
-  }
-
-  const selectFundingContact = (name: string) => {
-    setFundingDebtContact(name)
-    setShowFundingSuggestions(false)
-    fundingContactRef.current?.blur()
-  }
-
   const deductedWalletId = direction === 'OUT' ? walletId : exchangeWalletId;
   const deductedWallet = wallets.find(w => w.id === deductedWalletId);
   // @ts-ignore - Wallet With Balance injected at runtime
@@ -134,12 +101,12 @@ export default function TransactionForm({
   
   const rawAmount = Number(amount.replace(/,/g, '') || 0);
   const rawFee = Number(exchangeFee || 0);
-  const rawFundingDebt = Number(fundingDebtAmount.replace(/,/g, '') || 0);
+  const totalFundingDebt = fundingDebts.reduce((acc, curr) => acc + Number(curr.amount.replace(/,/g, '') || 0), 0);
   
   // If it's IN and no exchange wallet, we are not deducting anything!
   const deductedAmount = !deductedWalletId ? 0 : (direction === 'OUT' ? rawAmount : (rawAmount - rawFee));
   
-  const projectedBalance = deductedWalletBalance + (showFundingDebt ? rawFundingDebt : 0) - deductedAmount;
+  const projectedBalance = deductedWalletBalance + totalFundingDebt - deductedAmount;
 
   const validate = () => {
     const newErrors: string[] = []
@@ -151,12 +118,22 @@ export default function TransactionForm({
     if (isCustomerDebt && !contactName) newErrors.push("Kailangan ang pangalan kapag Inutang ng Customer")
     if (isBorrowed && !contactName) newErrors.push("Kailangan ang pangalan kung kanino inutang")
     
-    if (showFundingDebt) {
-      if (!fundingDebtAmount || isNaN(rawFundingDebt) || rawFundingDebt <= 0) {
-        newErrors.push("Maglagay ng tamang halaga para sa inutang na pampuno")
+    if (fundingDebts.length > 0) {
+      let fundingError = false;
+      fundingDebts.forEach(fd => {
+        const amt = Number(fd.amount.replace(/,/g, ''));
+        if (!amt || amt <= 0 || !fd.contactName.trim()) {
+          fundingError = true;
+        }
+      });
+      if (fundingError) newErrors.push("Pakikumpleto ang pangalan at tamang halaga para sa mga inutang pampuno.");
+      
+      const mainAmount = Number(amount.replace(/,/g, ''));
+      if (totalFundingDebt > mainAmount && direction === 'IN') {
+        newErrors.push("Ang kabuuang inutang ay hindi pwedeng mas malaki sa ipinasok na amount.");
       }
-      if (!fundingDebtContact) newErrors.push("Kailangan ang pangalan kung kanino nanghiram pampuno")
     }
+      
 
     if (projectedBalance < 0) {
       newErrors.push(`Hindi sapat ang pondo sa ${deductedWallet?.name}. Gumamit ng Nanghiram Pampuno kung may hiniram kang pandagdag.`)
@@ -230,8 +207,7 @@ export default function TransactionForm({
       exchange_wallet_id: exchangeWalletId || undefined,
       exchange_fee: (exchangeWalletId || isCustomerDebt) ? Number(exchangeFee || 0) : undefined,
       note: note || undefined,
-      funding_debt_amount: showFundingDebt ? Number(fundingDebtAmount.replace(/,/g, '')) : undefined,
-      funding_debt_contact: showFundingDebt ? fundingDebtContact : undefined
+      funding_debts: fundingDebts.length > 0 ? fundingDebts.map(fd => ({ contact_name: fd.contactName, amount: Number(fd.amount.replace(/,/g, '')) })) : undefined
     }
 
     try {
@@ -677,128 +653,104 @@ export default function TransactionForm({
 
           </div>
           
-          {exchangeWalletId && exchangeWalletId === wallets.find(w => w.slug === 'cash')?.id && (
-            <div className="mt-4">
-              <label className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-2xl cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={showFundingDebt} 
-                  onChange={(e) => setShowFundingDebt(e.target.checked)}
-                  className="w-6 h-6 rounded text-red-600 focus:ring-red-500"
-                />
-                <span className="font-bold text-lg">
-                  {direction === 'OUT' 
-                    ? '+ Nanghiram Pampuno (Kulang Pondo)' 
-                    : '+ Nanghiram Pampuno (Kulang Cash)'}
-                </span>
-              </label>
-
-              {showFundingDebt && (
-                <div className="mt-2 p-4 bg-red-50 rounded-2xl border border-red-100 space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-red-700 uppercase tracking-widest mb-1">Magkano inutang?</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-red-700">₱</span>
-                      <input 
-                        type="text" 
-                        inputMode="decimal"
-                        value={fundingDebtAmount}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/[^0-9.]/g, '')
-                          const parts = raw.split('.')
-                          let val = parts[0]
-                          if (parts.length > 1) val += '.' + parts.slice(1).join('')
-                          if (val) {
-                            const p = val.split('.')
-                            p[0] = parseInt(p[0]).toLocaleString('en-US')
-                            setFundingDebtAmount(p.join('.'))
-                          } else {
-                            setFundingDebtAmount('')
-                          }
-                        }}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-red-200 text-xl font-black focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-zinc-900"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Projected Balance Indicator */}
-                  <div className="bg-white p-4 rounded-xl border border-red-200 shadow-sm space-y-2">
-                    <div className="flex justify-between items-center text-sm font-bold">
-                      <span className="text-zinc-500">Current Balance ({deductedWallet?.name})</span>
-                      <span className="text-zinc-900">₱{deductedWalletBalance.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm font-bold text-red-600">
-                      <span>Total Needed</span>
-                      <span>-₱{deductedAmount.toLocaleString()}</span>
-                    </div>
-                    {rawFundingDebt > 0 && (
-                      <div className="flex justify-between items-center text-sm font-black text-green-600">
-                        <span>Borrowed Amount</span>
-                        <span>+₱{rawFundingDebt.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="h-px bg-zinc-200 my-2" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold uppercase tracking-widest text-zinc-500">Remaining</span>
-                      <span className={`text-xl font-black ${projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {projectedBalance < 0 ? '-' : ''}₱{Math.abs(projectedBalance).toLocaleString()}
-                      </span>
-                    </div>
-                    {projectedBalance < 0 && (
-                      <div className="text-xs font-bold text-red-500 mt-1 flex items-center gap-1">
-                        <AlertTriangle size={14} />
-                        Kulang pa ng ₱{Math.abs(projectedBalance).toLocaleString()}! Magne-negative ang wallet.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="relative z-40">
-                    <label className="block text-sm font-bold text-red-700 uppercase tracking-widest mb-1">Kanino?</label>
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400" size={20} />
-                      <input 
-                        ref={fundingContactRef}
-                        type="text" 
-                        value={fundingDebtContact}
-                        onChange={async (e) => {
-                          setFundingDebtContact(e.target.value)
-                          setShowFundingSuggestions(true)
-                          const results = await searchContacts(e.target.value)
-                          setFundingContactSuggestions(results || [])
-                        }}
-                        onFocus={async () => {
-                          setShowFundingSuggestions(true)
-                          const results = await searchContacts(fundingDebtContact)
-                          setFundingContactSuggestions(results || [])
-                        }}
-                        onBlur={() => setTimeout(() => setShowFundingSuggestions(false), 200)}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl border border-red-200 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-zinc-900"
-                        placeholder="Pangalan (e.g. Joy)"
-                      />
-                      {showFundingSuggestions && fundingContactSuggestions.length > 0 && (
-                        <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-red-100 rounded-xl shadow-xl overflow-hidden max-h-[200px] overflow-y-auto">
-                          {fundingContactSuggestions.map((c) => (
-                            <li 
-                              key={c.id}
-                              onMouseDown={() => {
-                                setFundingDebtContact(c.name)
-                                setShowFundingSuggestions(false)
-                              }}
-                              className="px-4 py-3 hover:bg-red-50 cursor-pointer text-lg font-medium text-zinc-700 border-b border-zinc-50 last:border-0 transition-colors"
-                            >
-                              {c.name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+          
+          {/* Lenders / Funding Debt Section */}
+          <div className="mt-8 border-2 border-red-100 rounded-[2rem] overflow-hidden bg-white shadow-sm">
+            <div className="p-5 flex items-center justify-between bg-red-50/50">
+              <span className="font-bold text-lg text-red-900 tracking-tight flex items-center gap-2">
+                <span className="text-2xl text-red-400">+</span>
+                Add Lenders (Pampuno)
+              </span>
+              <button 
+                type="button"
+                onClick={() => setFundingDebts([...fundingDebts, { id: Math.random().toString(), contactName: '', amount: '' }])}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-xl active:scale-95 transition-all shadow-sm"
+              >
+                + Add Lender
+              </button>
             </div>
-          )}
 
+            {fundingDebts.length > 0 && (
+              <div className="p-5 space-y-4">
+                {fundingDebts.map((fd, index) => (
+                  <div key={fd.id} className="p-4 bg-red-50/50 rounded-2xl border border-red-100 relative shadow-sm">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newDebts = [...fundingDebts];
+                        newDebts.splice(index, 1);
+                        setFundingDebts(newDebts);
+                      }}
+                      className="absolute top-4 right-4 text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      <XCircle size={24} />
+                    </button>
+                    
+                    <div className="space-y-4 pr-8">
+                      <div>
+                        <label className="block text-xs font-black text-red-700/60 uppercase tracking-widest mb-1.5">Kanino inutang?</label>
+                        <input 
+                          type="text"
+                          value={fd.contactName}
+                          onChange={(e) => {
+                            const newDebts = [...fundingDebts];
+                            newDebts[index].contactName = e.target.value;
+                            setFundingDebts(newDebts);
+                          }}
+                          placeholder="Pangalan..."
+                          className="w-full bg-white border border-red-200 rounded-xl p-3 text-lg font-bold text-red-900 focus:outline-none focus:ring-2 focus:ring-red-400 placeholder:text-red-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-red-700/60 uppercase tracking-widest mb-1.5">Magkano?</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-red-300">₱</span>
+                          <input 
+                            type="text" 
+                            inputMode="decimal"
+                            value={fd.amount}
+                            onChange={(e) => {
+                              let raw = e.target.value.replace(/[^0-9.]/g, '')
+                              const parts = raw.split('.')
+                              if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('')
+                              if (parts[1] && parts[1].length > 2) raw = parts[0] + '.' + parts[1].slice(0, 2)
+                              
+                              if (raw) {
+                                const p = raw.split('.')
+                                p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                raw = p.join('.')
+                              }
+                              
+                              const newDebts = [...fundingDebts];
+                              newDebts[index].amount = raw;
+                              setFundingDebts(newDebts);
+                            }}
+                            className="w-full bg-white border border-red-200 rounded-xl py-3 pl-10 pr-4 text-xl font-black text-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 placeholder:text-red-200"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Subtotal of Borrowed */}
+                <div className="bg-red-100/40 p-4 rounded-xl flex flex-col gap-2 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-red-800">Total Borrowed:</span>
+                    <span className="font-black text-xl text-red-700">₱{totalFundingDebt.toLocaleString()}</span>
+                  </div>
+                  {direction === 'IN' && rawAmount > 0 && (
+                    <div className="flex justify-between items-center pt-2 border-t border-red-200/50">
+                      <span className="font-bold text-zinc-600">Your Own Money (Net):</span>
+                      <span className="font-black text-lg text-zinc-900">₱{Math.max(0, rawAmount - totalFundingDebt).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
           {(exchangeWalletId || isCustomerDebt) && (
             <div className="mt-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4">
               
@@ -923,4 +875,5 @@ export default function TransactionForm({
       </div>
     </form>
   )
+
 }

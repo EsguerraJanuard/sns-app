@@ -107,6 +107,12 @@ export default async function TransactionsPage({
                           <span>
                             {new Date(tx.occurred_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
+                          {tx.fundingCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-orange-500 font-black">{tx.fundingCount} Pampuno</span>
+                            </>
+                          )}
                           {tx.kind === 'BORROWED' && (
                             <>
                               <span>•</span>
