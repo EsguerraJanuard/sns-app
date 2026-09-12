@@ -53,6 +53,7 @@ export default function TransactionForm({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const [confirmChecked, setConfirmChecked] = useState(false)
+  const [isOffline, setIsOffline] = useState(false)
 
   // Refs for auto-focus navigation
   const amountRef = useRef<HTMLInputElement>(null)

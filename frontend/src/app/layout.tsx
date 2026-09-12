@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   },
 };
 
+import AutoRefresh from "@/components/AutoRefresh";
+import NetworkStatus from "@/components/NetworkStatus";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,8 +39,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-zinc-200 text-zinc-900 font-sans">
+        <AutoRefresh />
         {/* Redmi Note 9s / Large Android dimensions: width ~393px to 400px */}
         <div className="flex-1 w-full max-w-[400px] mx-auto bg-zinc-50 shadow-2xl min-h-screen flex flex-col relative overflow-x-hidden">
+          <NetworkStatus />
           {children}
         </div>
       </body>
