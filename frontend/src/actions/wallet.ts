@@ -26,33 +26,41 @@ export async function getWallets(): Promise<WalletWithBalance[]> {
     return []
   }
 
-  // Calculate expected balances dynamically
-  // In a real prod environment with many transactions, you'd use a SQL View or RPC
-  const { data: transactions, error: txError } = await supabase
-    .from('transactions')
-    .select('wallet_id, amount, direction')
-    .eq('status', 'active')
-    
-  if (txError) {
-    console.error('Error fetching transactions for balances:', txError)
-    return wallets.map(w => ({ ...w, expected_balance: Number(w.opening_balance) }))
-  }
-
   const balances: Record<string, number> = {}
   
   wallets.forEach(w => {
     balances[w.id] = Number(w.opening_balance)
   })
 
-  transactions?.forEach(tx => {
-    if (balances[tx.wallet_id] !== undefined) {
-      if (tx.direction === 'IN') {
-        balances[tx.wallet_id] += Number(tx.amount)
-      } else if (tx.direction === 'OUT') {
-        balances[tx.wallet_id] -= Number(tx.amount)
-      }
+  // Try fetching from the O(1) SQL View first
+  const { data: viewData, error: viewError } = await supabase.from('wallet_balances').select('wallet_id, expected_balance')
+  
+  if (!viewError && viewData) {
+    viewData.forEach(row => {
+      balances[row.wallet_id] = Number(row.expected_balance)
+    })
+  } else {
+    // FALLBACK: O(N) calculation if the View hasn't been created yet on the Supabase instance
+    const { data: transactions, error: txError } = await supabase
+      .from('transactions')
+      .select('wallet_id, amount, direction')
+      .eq('status', 'active')
+      
+    if (txError) {
+      console.error('Error fetching transactions for balances:', txError)
+      return wallets.map(w => ({ ...w, expected_balance: Number(w.opening_balance) }))
     }
-  })
+
+    transactions?.forEach(tx => {
+      if (balances[tx.wallet_id] !== undefined) {
+        if (tx.direction === 'IN') {
+          balances[tx.wallet_id] += Number(tx.amount)
+        } else if (tx.direction === 'OUT') {
+          balances[tx.wallet_id] -= Number(tx.amount)
+        }
+      }
+    })
+  }
 
   return wallets.map(w => ({
     ...w,

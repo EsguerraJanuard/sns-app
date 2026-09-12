@@ -118,15 +118,32 @@ export async function createTransaction(input: TransactionInput) {
   if (input.exchange_wallet_id && transferGroupId) {
     const fee = input.exchange_fee || 0
     let exchangeAmount = input.amount
-    let exchangeDirection = 'IN'
+    let exchangeDirection = input.direction === 'IN' ? 'OUT' : 'IN'
     
-    // Customer Transfer: The fee is applied directly to the exchange wallet amount.
-    if (input.direction === 'IN') {
-      exchangeDirection = 'OUT'
-      exchangeAmount = input.amount - fee
+    if (input.is_personal_transfer) {
+      // Base amounts must match exactly for personal transfers
+      exchangeAmount = input.amount
+      
+      // Explicitly create the 3rd EXPENSE transaction for the fee
+      if (fee > 0) {
+        const feeWalletId = input.direction === 'OUT' ? input.wallet_id : input.exchange_wallet_id
+        await supabase.from('transactions').insert({
+          wallet_id: feeWalletId,
+          contact_id: finalContactId || null,
+          amount: fee,
+          direction: 'OUT',
+          kind: 'EXPENSE',
+          note: 'Personal Transfer Fee',
+          transfer_group_id: transferGroupId
+        })
+      }
     } else {
-      exchangeDirection = 'IN'
-      exchangeAmount = input.amount + fee
+      // Normal Customer Transfer: fee is applied directly to the exchange wallet amount.
+      if (input.direction === 'IN') {
+        exchangeAmount = input.amount - fee
+      } else {
+        exchangeAmount = input.amount + fee
+      }
     }
 
     if (exchangeAmount > 0) {
@@ -136,7 +153,7 @@ export async function createTransaction(input: TransactionInput) {
         amount: exchangeAmount,
         direction: exchangeDirection,
         kind: 'TRANSFER',
-        note: `Exchange / Transfer Fee: ₱${fee}`,
+        note: input.is_personal_transfer ? 'Personal Transfer' : `Exchange / Transfer Base`,
         transfer_group_id: transferGroupId
       })
     }

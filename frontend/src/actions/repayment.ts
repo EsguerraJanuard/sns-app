@@ -17,6 +17,27 @@ export async function repayObligation(formData: FormData) {
     throw new Error('Invalid input')
   }
 
+  // ATTEMPT RPC INVOCATION FIRST (Fixes double-spend/race conditions)
+  const { data: rpcResult, error: rpcError } = await supabase.rpc('repay_obligation', {
+    p_contact_id: contactId,
+    p_wallet_id: walletId,
+    p_amount: amount,
+    p_note: 'Repayment',
+    p_is_lent: isLent
+  });
+
+  if (!rpcError && rpcResult?.success) {
+    revalidatePath('/', 'layout')
+    redirect('/obligations')
+  }
+
+  // If RPC is missing or fails for generic reasons, fallback to JS logic (Not concurrent safe)
+  if (rpcResult?.error && !rpcError) {
+      throw new Error(rpcResult.error);
+  }
+
+  console.warn("RPC missing or failed, falling back to JS-level repayment handling...", rpcError);
+
   // 1. Fetch all open obligations for this contact, ordered by oldest first
   const debtType = isLent ? 'LENT' : 'BORROWED'
   const { data: obsRaw, error: obsError } = await supabase
