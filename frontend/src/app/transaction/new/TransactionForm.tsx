@@ -647,7 +647,7 @@ export default function TransactionForm({
                   {direction === 'OUT' ? <Receipt size={24} strokeWidth={2.5} /> : <XCircle size={24} strokeWidth={2.5} />}
                 </div>
                 <span className={`text-sm sm:text-base uppercase tracking-widest transition-colors text-center w-full ${(!exchangeWalletId && (direction === 'OUT' ? isExpense : !isBorrowed)) ? 'font-black text-white' : 'font-bold text-zinc-400'}`}>
-                  {direction === 'OUT' ? 'EXPENSE / BILLS' : 'NO DEDUCTION'}
+                  {direction === 'OUT' ? 'EXPENSE / BILLS' : 'NO CHARGE'}
                 </span>
               </div>
             </label>
@@ -816,28 +816,6 @@ export default function TransactionForm({
             )}
         </section>
 
-        {direction === 'IN' && (
-          <section>
-            <label className={`
-              flex items-center gap-4 p-6 rounded-3xl border-2 cursor-pointer transition-colors shadow-sm mt-4
-              ${isBorrowed ? 'bg-red-50 border-red-200' : 'bg-white border-zinc-100 hover:bg-zinc-50'}
-            `}>
-              <div className="flex-1 min-w-0">
-                <p className={`text-xl sm:text-2xl font-black truncate ${isBorrowed ? 'text-red-700' : 'text-zinc-700'}`}>Borrowed</p>
-                <p className={`text-base font-medium ${isBorrowed ? 'text-red-600/70' : 'text-zinc-400'}`}>Check if this money is borrowed</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={isBorrowed}
-                onChange={(e) => {
-                  setIsBorrowed(e.target.checked)
-                  if (e.target.checked) setExchangeWalletId('')
-                }}
-                className="w-8 h-8 rounded-lg border-zinc-300 text-red-600 focus:ring-red-500 bg-white shadow-sm"
-              />
-            </label>
-          </section>
-        )}
 
         {direction === 'OUT' && (
           <section className="space-y-3 mt-4">
